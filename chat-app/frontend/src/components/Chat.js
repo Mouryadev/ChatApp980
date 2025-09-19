@@ -14,12 +14,55 @@ function Chat() {
   const token = localStorage.getItem('token');
   const currentUser = localStorage.getItem('username');
   const messagesEndRef = useRef(null);
+ const [isOpen, setIsOpen] = useState(false);
 
+const [isTyping, setIsTyping] = useState(false); // other user typing?
+const typingTimeout = useRef(null);
+
+// Emit typing event
+const handleTyping = () => {
+  if (!selectedUser) return;
+  const userId = JSON.parse(atob(token.split('.')[1])).id;
+
+  socket.emit("typing", {
+    senderId: userId,
+    receiverId: selectedUser._id,
+  });
+
+  // Agar banda stop kare toh after 2s "stopTyping" bhejna
+  if (typingTimeout.current) clearTimeout(typingTimeout.current);
+  typingTimeout.current = setTimeout(() => {
+    socket.emit("stopTyping", {
+      senderId: userId,
+      receiverId: selectedUser._id,
+    });
+  }, 2000);
+};
   // Auto-scroll to the latest message
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+useEffect(() => {
+  socket.on("userTyping", (data) => {
+    if (data.senderId === selectedUser?._id) {
+      setIsTyping(true);
+    }
+  });
+
+  socket.on("userStopTyping", (data) => {
+    if (data.senderId === selectedUser?._id) {
+      setIsTyping(false);
+    }
+  });
+
+  return () => {
+    socket.off("userTyping");
+    socket.off("userStopTyping");
+  };
+}, [selectedUser]);
+
+  
   // Initialize Particles.js
   useEffect(() => {
     if (window.particlesJS) {
@@ -148,25 +191,50 @@ function Chat() {
         animate="visible"
         whileHover={{ boxShadow: '0 15px 30px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.3)' }}
       >
-        <motion.div
-          className="user-list bg-gray-800 p-6 rounded-l-xl"
-          variants={userListVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <h3 className="text-xl font-bold text-white mb-4">Users</h3>
-          {users.map((user) => (
-            <motion.div
-              key={user._id}
-              className={`user p-3 rounded-lg cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white transition-all ${selectedUser?._id === user._id ? 'bg-purple-600 text-white' : ''}`}
-              onClick={() => handleUserClick(user)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {user.username}
-            </motion.div>
-          ))}
-        </motion.div>
+      <motion.div
+      className="user-list bg-gray-800 p-6 rounded-l-xl"
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Heading */}
+      <h3
+        className="text-xl font-bold text-white mb-4 cursor-pointer sm:cursor-default flex items-center justify-between"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        Users
+        {/* mobile pe hi arrow dikhana */}
+        <span className="sm:hidden">
+          {isOpen ? "▲" : "▼"}
+        </span>
+      </h3>
+
+      {/* User list */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: isOpen ? "auto" : 0,
+          opacity: isOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden sm:!h-auto sm:!opacity-100"
+      >
+        {users.map((user) => (
+          <motion.div
+            key={user._id}
+            className={`user p-3 rounded-lg cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white transition-all ${
+              selectedUser?._id === user._id
+                ? "bg-purple-600 text-white"
+                : ""
+            }`}
+            onClick={() => handleUserClick(user)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {user.username}
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
         <motion.div
           className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col"
           variants={chatBoxVariants}
@@ -177,28 +245,42 @@ function Chat() {
             <>
               <h3 className="text-xl font-bold text-white mb-4">Chat with {selectedUser.username}</h3>
               <div className="messages flex-grow overflow-y-auto bg-gray-700 rounded-lg p-4">
-                {messages.map((msg, index) => (
-                  <motion.div
-                    key={index}
-                    className={`p-2 mb-2 rounded-lg ${msg.sender.username === currentUser ? 'my-message bg-purple-600 text-white ml-auto' : 'other-message bg-gray-600 text-gray-200 mr-auto'}`}
-                    variants={messageVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    <strong>{msg.sender.username}: </strong>
-                    {msg.content}
-                  </motion.div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+  {messages.map((msg, index) => (
+    <motion.div
+      key={index}
+      className={`p-2 mb-2 rounded-lg ${
+        msg.sender.username === currentUser
+          ? "my-message bg-purple-600 text-white ml-auto"
+          : "other-message bg-gray-600 text-gray-200 mr-auto"
+      }`}
+      variants={messageVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <strong>{msg.sender.username}: </strong>
+      {msg.content}
+    </motion.div>
+  ))}
+
+  {/* Typing Indicator */}
+  {isTyping && (
+    <div className="text-gray-300 italic animate-pulse">
+      {selectedUser.username} is typing...
+    </div>
+  )}
+
+  <div ref={messagesEndRef} />
+</div>
+
               <form onSubmit={handleSendMessage} className="mt-4 flex space-x-2">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                />
+               <input
+  type="text"
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  onInput={handleTyping}   // << yahan call
+  placeholder="Type a message..."
+  className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+/>
                 <button
                   type="submit"
                   className="bg-purple-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold"

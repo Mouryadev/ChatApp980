@@ -94,6 +94,13 @@ app.get('/api/messages/:receiverId', authenticateToken, async (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+    socket.on("typing", ({ senderId, receiverId }) => {
+    io.to(receiverId).emit("userTyping", { senderId });
+  });
+
+  socket.on("stopTyping", ({ senderId, receiverId }) => {
+    io.to(receiverId).emit("userStopTyping", { senderId });
+  });
   socket.on('join', (userId) => {
     socket.join(userId);
   });

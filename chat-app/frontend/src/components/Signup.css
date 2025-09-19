@@ -31,3 +31,12 @@
 
     transition: .6s ease;
 }
+form.space-y-5 {
+    flex-direction: column;
+    align-items: center;
+}
+.bg-gray-800.p-8.rounded-xl.shadow-2xl.max-w-md.w-full.z-10.border-2.border-transparent.gradient-border {
+    box-shadow: 0 2px 4px rgb(182 154 251 / 60%) ! IMPORTANT;
+    background: transparent;
+    backdrop-filter: blur(2px);
+}

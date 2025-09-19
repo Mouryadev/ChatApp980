@@ -14,7 +14,10 @@
   animation: gradientShift 4s ease infinite;
 }
 h2.text-3xl.font-extrabold.text-center.text-white.mb-6 {
-    color: black;
+    color: white;
+}
+.focus\:ring-purple-500:focus {
+    --tw-ring-color: 0 2px 4px rgb(182 154 251 / 60%) ! IMPORTANT;
 }
 input.w-full.px-4.py-3.bg-gray-700.text-white.border.border-gray-600.rounded-lg.focus\:outline-none.focus\:ring-2.focus\:ring-purple-500.placeholder-gray-400.transition-all {
     background: white;
@@ -31,4 +34,16 @@ input.w-full.px-4.py-3.bg-gray-700.text-white.border.border-gray-600.rounded-lg.
   100% {
     background-position: 200% 50%;
   }
+}
+form.space-y-5 {
+    flex-direction: column;
+    align-items: center;
+}
+form.space-y-5 div {
+    width: 100%;
+}
+.bg-gray-800.p-8.rounded-xl.shadow-2xl.max-w-md.w-full.z-10.border-2.border-transparent.gradient-border {
+    box-shadow: 0 2px 4px rgb(182 154 251 / 60%) ! IMPORTANT;
+    background: transparent;
+    backdrop-filter: blur(2px);
 }
