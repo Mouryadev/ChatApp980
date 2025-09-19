@@ -1,0 +1,146 @@
+/* Gradient border animation */
+.gradient-border {
+  position: relative;
+  border: none;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  background: white;
+  background-size: 200%;
+  border-radius: 14px;
+  animation: gradientShift 4s ease infinite;
+}
+
+
+/* Chat container */
+.chat-container {
+  display: flex;
+  height: calc(100vh - 4rem); /* Adjusted for margin */
+  max-width: 1200px; /* Matches max-w-6xl */
+}
+
+/* User list */
+.user-list {
+  width: 30%;
+  max-width: 300px;
+  padding: 24px;
+  border-right: 1px solid #374151; /* Dark gray border */
+}
+
+/* User item */
+.user {
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.user:hover {
+  background-color: #374151; /* Dark gray hover */
+  color: #ffffff;
+}
+.user.selected {
+  background-color: #7c3aed; /* Purple for selected user */
+  color: #ffffff;
+}
+
+/* Chat box */
+.chat-box {
+  width: 70%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Messages container */
+.messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #1f2a44; /* Dark gray background */
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  max-height: calc(100% - 80px); /* Adjusted for form height */
+}
+
+/* Message styles */
+.my-message {
+  max-width: fit-content;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background-color: #7c3aed; /* Purple for own messages */
+  color: #ffffff;
+  border-radius: 8px;
+  margin-left: auto;
+  text-align: left; /* Align text left for readability */
+}
+.other-message {
+  max-width: fit-content;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background-color: #4b5563; /* Gray for others' messages */
+  color: #e5e7eb;
+  border-radius: 8px;
+  margin-right: auto;
+  text-align: left;
+}
+
+/* Form */
+form {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+}
+/* Input */
+input {
+  flex-grow: 1;
+  padding: 8px 16px;
+  background-color: #1f2a44;
+  color: #ffffff;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  outline: none;
+}
+input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.5); /* Purple focus ring */
+}
+input::placeholder {
+  color: #9ca3af; /* Light gray placeholder */
+}
+
+/* Button */
+button {
+  padding: 8px 16px;
+  background-color: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #6d28d9; /* Darker purple on hover */
+}
+@media(max-width:768px){
+    .chat-container{
+        flex-direction: column;
+    }
+    .chat-box {
+    width: 100%;
+   
+}
+.user-list {
+    width: 100%;
+    max-width: -webkit-fill-available;
+    padding: 20px;
+    border-right: 1px solid #374151;
+}
+}
+.sub-btn {
+    transition: .6s ease;
+    margin: 0 !IMPORTANT;
+}

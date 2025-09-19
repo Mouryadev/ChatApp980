@@ -1,0 +1,33 @@
+/* Gradient border animation */
+.gradient-border {
+  position: relative;
+  border: none;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  background: white;
+  background-size: 200%;
+  border-radius: 14px;
+  animation: gradientShift 4s ease infinite;
+}
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+.btn:hover {
+    background: white;
+    border: 1px solid black;
+    color: black;
+}
+.btn {
+      border: 1px solid black;
+
+    transition: .6s ease;
+}
