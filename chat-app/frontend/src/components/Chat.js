@@ -4,7 +4,7 @@ import io from 'socket.io-client';
 import { motion } from 'framer-motion';
 import './Chat.css';
 
-const socket = io('http://localhost:5000', { autoConnect: true });
+const socket = io(process.env.REACT_APP_BASE_URL, { autoConnect: true });
 
 function Chat() {
   const [users, setUsers] = useState([]);
@@ -90,7 +90,7 @@ useEffect(() => {
     // Fetch all users
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/users', {
+        const response = await axios.get('process.env.REACT_APP_BASE_URL/api/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(response.data);
@@ -130,7 +130,7 @@ useEffect(() => {
   const handleUserClick = async (user) => {
     setSelectedUser(user);
     try {
-      const response = await axios.get(`http://localhost:5000/api/messages/${user._id}`, {
+      const response = await axios.get(`process.env.REACT_APP_BASE_URL/api/messages/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(response.data);
