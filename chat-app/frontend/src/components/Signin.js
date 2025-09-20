@@ -36,10 +36,7 @@ function Signin() {
   const handleSignin = async (e) => {
     e.preventDefault();
     try {
-const response = await axios.post(
-  `${process.env.REACT_APP_BASE_URL}/api/signin`,
-  { username, password }
-);
+      const response = await axios.post('https://chatapp980.onrender.com/api/signin', { username, password });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('username', response.data.username);
       navigate('/chat');

@@ -81,7 +81,7 @@ app.post('/api/signin', async (req, res) => {
 // Get all users
 app.get('/api/users', authenticateToken, async (req, res) => {
   const users = await User.find({}, 'username').lean();
-  res.json(users.filter(user => user._id.toString() !== req.user.id));  
+  res.json(users.filter(user => user._id.toString() !== req.user.id));
 });
 
 // Get messages between two users
