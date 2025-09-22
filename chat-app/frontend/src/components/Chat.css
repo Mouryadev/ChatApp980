@@ -291,4 +291,6 @@ button:active {
   transition: all 0.6s ease;
   margin: 0 !important;
   background: linear-gradient(212deg, #bc9ddf, #904eff);
+}.p-2.max-w-xs.rounded-lg.my-message.bg-purple-600.text-white {
+    background: transparent;
 }
