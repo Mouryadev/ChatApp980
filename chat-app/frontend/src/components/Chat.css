@@ -45,8 +45,8 @@
     max-width: 300px;
     padding: 24px;
     border-right: 1px solid rgba(55, 65, 81, 0.3);
-    background: none;
-    backdrop-filter: blur(2px);
+    background: #ab6bfb0d;
+    backdrop-filter: blur(4px);
     border-radius: 16px;
     border-bottom-left-radius: 16px;
     transition: all 0.3s ease;
@@ -55,19 +55,25 @@
 }
 /* User item */
 .user {
-  padding: 12px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  color: #9ca3af;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    color: white;
+    background: none;
+    border-bottom: 1px solid #d6bdf7;
+    padding: 10px 10px 10px;
+    margin: 15px 0;
+    transition: .6s ease;
 }
-.user:hover {
-  background-color: rgba(124, 58, 237, 0.2); /* Subtle purple hover */
-  color: #ffffff;
-  transform: translateX(5px);
+.user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all {
+   
+    transition: .6s ease;
+}
+.user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all.bg-purple-600.text-white {
+    background: linear-gradient(212deg, #a78dc7, #803fefbd);
 }
 .user.selected {
-  background-color: #7c3aed;
+    box-shadow: 0 2px 4px rgb(182 154 251 / 60%) ! IMPORTANT;
   color: #ffffff;
   font-weight: 600;
 }
@@ -96,35 +102,70 @@
     max-height: calc(100% - 90px);
     box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(20px);
+    overflow-x: hidden;
+    
 }
-
+.chat-box .flex {
+    background: linear-gradient(212deg, #d8b8ff, #8044e5bd);
+    padding: 15px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(25px);
+}
+.messages .flex {
+    background: transparent;
+  
+}
+form.mt-4.flex.space-x-2 {
+    background: none;
+}
 /* Message styles */
 .my-message {
-  max-width: fit-content;
-  margin: 8px 0;
-  padding: 10px 14px;
-  background: transparent;
-  color: #ffffff;
-  border-radius: 12px 0 12px 12px;
-  margin-left: auto;
-  text-align: left;
-     box-shadow: 0 2px 4px rgb(182 154 251 / 60%);
-  animation: slideInRight 0.3s ease-out;
-  word-wrap: break-word;
-  background: linear-gradient(212deg, #b575fd, #8443f1);
+    max-width: fit-content;
+    /* margin: 8px 0; */
+    /* padding: 10px 14px; */
+    background: transparent;
+    color: #ffffff;
+    border-radius: 12px 0 12px 12px;
+    margin-left: auto;
+    text-align: left;
+    word-wrap: break-word;
+    /* background: linear-gradient(212deg, #bc9ddf, #904eff); */
+    width: 90%;
 }
-.other-message {
+.content-wrapper {
     max-width: fit-content;
     margin: 8px 0;
     padding: 10px 14px;
+    background: transparent;
+    color: #ffffff;
+    border-radius: 12px 0 12px 12px;
+    margin-left: auto;
+    text-align: left;
+    word-wrap: break-word;
+    background: linear-gradient(212deg, #bc9ddf, #904eff);
+}
+.other-message {
+    max-width: fit-content;
+    /* margin: 8px 0; */
+    /* padding: 10px 14px; */
     background: transparent;
     color: #e5e7eb;
     border-radius: 0 12px 12px 12px;
     margin-right: auto;
     text-align: left;
+    /* box-shadow: 0 2px 4px rgb(182 154 251 / 60%); */
+    word-wrap: break-word;
+    width: 90%;
+}
+.other-message .content-wrapper {
+   
+    background: transparent;
+    color: #e5e7eb;
+    border-radius: 0 12px 12px 12px;
+ 
     box-shadow: 0 2px 4px rgb(182 154 251 / 60%);
-    animation: slideInLeft 0.3s ease-out;
-        word-wrap: break-word;
+    word-wrap: break-word;
+   
 }
 .chat-container.max-w-6xl.mx-auto.my-8.flex.rounded-xl.shadow-2xl.z-10.border-2.border-transparent.gradient-border {
     width: 95%;
@@ -199,8 +240,28 @@ button:active {
   .chat-container {
     flex-direction: column;
     height: calc(100vh - 2rem);
-    margin: 1rem;
+            margin: 1rem auto;
   }
+  .flex.items-center.gap-3.mb-4.user-toggle {
+    margin: 0;
+    align-items: center;
+    justify-content: start;
+}
+.flex.items-center.gap-3.mb-4.user-toggle h3 {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.messages .flex {
+   
+    padding: 0;
+}
+.chat-box .flex {
+  
+    padding: 10px 15px;
+  
+}
   .chat-box,
   .user-list {
     width: 100%;
@@ -208,10 +269,11 @@ button:active {
     border-radius: 0;
   }
   .user-list {
-    padding: 16px;
-    border-right: none;
-    border-bottom: 1px solid rgba(55, 65, 81, 0.3);
-    max-height: 40vh;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid rgba(55, 65, 81, 0.3);
+        max-height: 40vh;
+        width: 90%;
   }
   .chat-box {
     padding: 16px;
@@ -220,6 +282,7 @@ button:active {
   .messages {
     max-height: calc(100% - 80px);
             overflow-x: hidden;
+            padding: 0;
   }
 }
 
@@ -227,4 +290,5 @@ button:active {
 .sub-btn {
   transition: all 0.6s ease;
   margin: 0 !important;
+  background: linear-gradient(212deg, #bc9ddf, #904eff);
 }

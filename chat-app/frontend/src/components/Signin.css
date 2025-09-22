@@ -20,12 +20,16 @@ h2.text-3xl.font-extrabold.text-center.text-white.mb-6 {
     --tw-ring-color: 0 2px 4px rgb(182 154 251 / 60%) ! IMPORTANT;
 }
 input.w-full.px-4.py-3.bg-gray-700.text-white.border.border-gray-600.rounded-lg.focus\:outline-none.focus\:ring-2.focus\:ring-purple-500.placeholder-gray-400.transition-all {
-    background: white;
-    color: black;
+    background: #ffffff00;
+    color: white;
+    box-shadow: 0 0px 5px rgb(182 154 251 / 60%) ;
+    border: none;
+}
+button.w-full.btn.bg-purple-600.text-white.py-3.rounded-lg.font-semibold {
+    background: linear-gradient(212deg, #9c5de3, #471993);
 }
 .bg-purple-600 {
     --tw-bg-opacity: 1;
-    background-color: rgb(16 16 16);
 }
 @keyframes gradientShift {
   0% {
