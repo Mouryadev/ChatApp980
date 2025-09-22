@@ -113,7 +113,9 @@
 }
 .messages .flex {
     background: transparent;
-  
+      
+    padding: 0px 0px;
+    margin: 0;
 }
 form.mt-4.flex.space-x-2 {
     background: none;
@@ -237,6 +239,10 @@ button:active {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .chat-container.max-w-6xl.mx-auto.my-8.flex.rounded-xl.shadow-2xl.z-10.border-2.border-transparent.gradient-border {
+    width: 95%;
+    margin: 3vw auto;
+}
   .chat-container {
     flex-direction: column;
     height: calc(100vh - 2rem);
@@ -267,18 +273,18 @@ button:active {
     width: 100%;
     max-width: none;
     border-radius: 0;
-  }
+  }   
   .user-list {
-        padding: 10px;
+        padding:10px !IMPORTANT;
         border-right: none;
         border-bottom: 1px solid rgba(55, 65, 81, 0.3);
         max-height: 40vh;
         width: 90%;
   }
-  .chat-box {
-    padding: 16px;
+.chat-box {
     overflow: auto;
-  }
+    padding: 10px !IMPORTANT;
+}
   .messages {
     max-height: calc(100% - 80px);
             overflow-x: hidden;
