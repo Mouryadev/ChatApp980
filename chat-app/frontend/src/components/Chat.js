@@ -57,27 +57,50 @@ function Chat() {
     };
   }, [selectedUser]);
 
-  useEffect(() => {
-    if (window.particlesJS) {
-      window.particlesJS('particles-js', {
-        particles: {
-          number: { value: 100, density: { enable: true, value_area: 800 } },
-          color: { value: ['#8b5cf6', '#d946ef', '#ffffff'] },
-          shape: { type: 'circle' },
-          opacity: { value: 0.4, random: true },
-          size: { value: 2, random: true },
-          line_linked: { enable: true, distance: 120, color: '#8b5cf6', opacity: 0.3, width: 1 },
-          move: { enable: true, speed: 1.5, direction: 'none', random: true }
+useEffect(() => {
+  if (window.particlesJS) {
+    window.particlesJS('particles-js', {
+      particles: {
+        number: { value: 110, density: { enable: true, value_area: 800 } },
+        color: { value: ['#87eefb', '#aeeffb', '#4db8ff'] }, // soft gradient shades
+        shape: { type: 'circle' },
+        opacity: { value: 0.25, random: true }, // soft & varied
+        size: { value: 3, random: true }, // some small, some medium
+        line_linked: { 
+          enable: true, 
+          distance: 150, 
+          color: '#87eefb', 
+          opacity: 0.2, // very soft lines
+          width: 1 
         },
-        interactivity: {
-          detect_on: 'canvas',
-          events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' } },
-          modes: { grab: { distance: 140 }, push: { particles_nb: 3 } }
+        move: { 
+          enable: true, 
+          speed: 0.8, // smoother, slower movement
+          direction: 'none', 
+          random: true, 
+          straight: false, 
+          out_mode: 'out' 
+        }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: { 
+          onhover: { enable: true, mode: 'grab' }, 
+          onclick: { enable: true, mode: 'push' } 
         },
-        retina_detect: true
-      });
-    }
-  }, []);
+        modes: { 
+          grab: { 
+            distance: 170, 
+            line_linked: { opacity: 0.6, color: '#87eefb' } // subtle highlight on hover
+          }, 
+          push: { particles_nb: 4 } 
+        }
+      },
+      retina_detect: true
+    });
+  }
+}, []);
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -156,7 +179,7 @@ function Chat() {
             {users.map((user) => (
               <motion.div
                 key={user._id}
-                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300  transition-all ${selectedUser?._id === user._id ? "bg-purple-600 text-white" : ""
+                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300  transition-all ${selectedUser?._id === user._id ? "bg-blue-600 text-white" : ""
                   }`}
                 onClick={() => handleUserClick(user)}
               
@@ -190,7 +213,7 @@ function Chat() {
                 {messages.map((msg, index) => (
                   <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? "justify-end flex-row-reverse" : "justify-start"}`}>
                     <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="w-11 h-11 rounded-full object-cover border border-gray-500" />
-                  <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message bg-purple-600 text-white" : "other-message bg-gray-600 text-gray-200"}`}>
+                  <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message bg-blue-600 text-white" : "other-message bg-gray-600 text-gray-200"}`}>
                         <div className="content-wrapper">
   <strong>{msg.sender.username}: </strong>{msg.content}
   </div>
@@ -212,9 +235,9 @@ function Chat() {
                   onChange={(e) => setMessage(e.target.value)}
                   onInput={handleTyping}
                   placeholder="Type a message..."
-                  className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                  className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                 />
-                <button type="submit" className="bg-purple-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold">Send</button>
+                <button type="submit" className="bg-blue-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold">Send</button>
               </form>
             </>
           ) : (

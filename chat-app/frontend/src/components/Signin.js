@@ -11,27 +11,50 @@ function Signin() {
   const navigate = useNavigate();
 
   // Initialize Particles.js with dark theme
-  useEffect(() => {
-    if (window.particlesJS) {
-      window.particlesJS('particles-js', {
-        particles: {
-          number: { value: 100, density: { enable: true, value_area: 800 } },
-          color: { value: ['#8b5cf6', '#d946ef', '#ffffff'] }, // Purple, pink, white particles
-          shape: { type: 'circle' },
-          opacity: { value: 0.4, random: true },
-          size: { value: 2, random: true },
-          line_linked: { enable: true, distance: 120, color: '#8b5cf6', opacity: 0.3, width: 1 },
-          move: { enable: true, speed: 1.5, direction: 'none', random: true }
+ useEffect(() => {
+  if (window.particlesJS) {
+    window.particlesJS('particles-js', {
+      particles: {
+        number: { value: 100, density: { enable: true, value_area: 800 } },
+        color: { value: '#87eefb' }, 
+        shape: { type: 'circle' },
+        opacity: { value: 0.3, random: false }, // lighter opacity
+        size: { value: 2.5, random: true }, 
+        line_linked: { 
+          enable: true, 
+          distance: 140, 
+          color: '#87eefb', 
+          opacity: 0.25, // lighter lines
+          width: 1 
         },
-        interactivity: {
-          detect_on: 'canvas',
-          events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' } },
-          modes: { grab: { distance: 140 }, push: { particles_nb: 3 } }
+        move: { 
+          enable: true, 
+          speed: 1, 
+          direction: 'none', 
+          random: true, 
+          straight: false, 
+          out_mode: 'out' 
+        }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: { 
+          onhover: { enable: true, mode: 'grab' }, 
+          onclick: { enable: true, mode: 'push' } 
         },
-        retina_detect: true
-      });
-    }
-  }, []);
+        modes: { 
+          grab: { 
+            distance: 160, 
+            line_linked: { opacity: 0.5, color: '#87eefb' } // softer on hover
+          }, 
+          push: { particles_nb: 3 } 
+        }
+      },
+      retina_detect: true
+    });
+  }
+}, []);
+
 
   const handleSignin = async (e) => {
     e.preventDefault();
@@ -80,7 +103,7 @@ function Signin() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 transition-all"
+              className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 transition-all"
             />
           </motion.div>
           <motion.div variants={inputVariants} initial="hidden" animate="visible">
@@ -89,12 +112,12 @@ function Signin() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 transition-all"
+              className="w-full px-4 py-3 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 transition-all"
             />
           </motion.div>
           <button
             type="submit"
-            className="w-full btn bg-purple-600 text-white py-3 rounded-lg font-semibold"
+            className="w-full btn bg-blue-600 text-white py-3 rounded-lg font-semibold"
             variants={buttonVariants}
             initial="rest"
             whileHover="hover"
@@ -105,7 +128,7 @@ function Signin() {
         </form>
         <p className="mt-4 text-center text-gray-400">
           Don't have an account?{' '}
-          <a href="/signup" className="text-purple-400 hover:underline">
+          <a href="/signup" className="text-blue-400 hover:underline">
             Sign up
           </a>
         </p>
