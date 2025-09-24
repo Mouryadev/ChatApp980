@@ -69,7 +69,7 @@
    
     transition: .6s ease;
 }
-.user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all.bg-blue-600.text-white {
+.user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all.bg-purple-600.text-white {
      background: linear-gradient(212deg, #87eefb, #298aed);
 }
 .user.selected {
@@ -117,7 +117,7 @@
     padding: 15px 20px;
     border-radius: 12px;
     backdrop-filter: blur(25px);
-    color: white; 
+    color: white;
 }
 .messages .flex {
     background: transparent;
@@ -209,10 +209,17 @@ input {
   padding: 10px 16px;
   background: rgba(31, 42, 68, 0.7); /* Glass effect */
   color: #ffffff;
-  border: 1px solid rgba(124, 58, 237, 0.5);
+  border: 1px solid #49acf2;
   border-radius: 12px;
   outline: none;
   transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgb(81 181 243) ! IMPORTANT;
+}
+button.w-full.btn.bg-blue-600.text-white.py-3.rounded-lg.font-semibold:hover {
+    background: white;
+}
+button.w-full.btn.bg-blue-600.text-white.py-3.rounded-lg.font-semibold {
+    transition: .6s ease;
 }
 input:focus {
     border-color: #49acf2;
@@ -314,7 +321,7 @@ form.mt-4.flex.space-x-2 {
   transition: all 0.6s ease;
   margin: 0 !important;
    background: linear-gradient(212deg, #87eefb, #298aed);
-}.p-2.max-w-xs.rounded-lg.my-message.bg-blue-600.text-white {
+}.p-2.max-w-xs.rounded-lg.my-message.bg-purple-600.text-white {
     background: transparent;
 }
 .theme-toggle {
