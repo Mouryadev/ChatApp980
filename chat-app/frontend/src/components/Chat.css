@@ -17,6 +17,9 @@
     --tw-bg-opacity: 1;
     background: linear-gradient(212deg,#87eefb,#298aed) !IMPORTANT;
 }
+.other-message .text-xs {
+    text-align: left;
+}
 @keyframes gradientShift {
   0% { background-position: 0% 0%; }
   50% { background-position: 100% 100%; }
