@@ -13,6 +13,10 @@
     border-radius: 16px;
     animation: gradientShift 6s ease infinite;
 }
+.bg-blue-600 {
+    --tw-bg-opacity: 1;
+    background: linear-gradient(212deg,#87eefb,#298aed) !IMPORTANT;
+}
 @keyframes gradientShift {
   0% { background-position: 0% 0%; }
   50% { background-position: 100% 100%; }
