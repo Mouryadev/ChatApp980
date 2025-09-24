@@ -268,7 +268,7 @@ button:active {
 /* Responsive Design */
 @media (max-width: 768px) {
   .sign-wrapper {
-    width: 90%;
+    width: 90% !Important;
 }
   .chat-container.max-w-6xl.mx-auto.my-8.flex.rounded-xl.shadow-2xl.z-10.border-2.border-transparent.gradient-border {
     width: 95%;
