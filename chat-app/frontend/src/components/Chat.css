@@ -177,7 +177,7 @@ form.mt-4.flex.space-x-2 {
     color: #e5e7eb;
     border-radius: 0 12px 12px 12px;
  
-    box-shadow: 0 2px 4px rgb(182 154 251 / 60%);
+    box-shadow: 0 2px 4px #51b5f3!important;
     word-wrap: break-word;
    
 }
