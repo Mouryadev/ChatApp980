@@ -109,7 +109,7 @@ io.on('connection', (socket) => {
   socket.on('join', (userId) => {
     socket.join(userId);
   });
-// test
+
   socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
     const message = new Message({ sender: senderId, receiver: receiverId, content });
     await message.save();
