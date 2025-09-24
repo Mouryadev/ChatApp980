@@ -217,7 +217,7 @@ useEffect(() => {
                         <div className="content-wrapper">
   <strong>{msg.sender.username}: </strong>{msg.content}
   </div>
-  <div className="text-xs text-gray-400 mt-1 text-left">
+  <div className="text-xs text-gray-400 mt-1 text-right">
     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
   </div>
 
