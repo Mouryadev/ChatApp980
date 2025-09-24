@@ -89,7 +89,7 @@ function Signin() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-900">
       <div id="particles-js" className="absolute inset-0 z-0"></div>
       <motion.div
-        className="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full z-10 border-2 border-transparent gradient-border"
+        className="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full sign-wrapper z-10 border-2 border-transparent gradient-border"
         variants={formVariants}
         initial="hidden"
         animate="visible"
