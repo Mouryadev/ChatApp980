@@ -223,7 +223,7 @@ input {
       box-shadow: 0 2px 4px rgb(81 181 243) ! IMPORTANT;
 }
 button.w-full.btn.bg-blue-600.text-white.py-3.rounded-lg.font-semibold:hover {
-    background: white;
+    background: white !important;
 }
 button.w-full.btn.bg-blue-600.text-white.py-3.rounded-lg.font-semibold {
     transition: .6s ease;
@@ -267,6 +267,9 @@ button:active {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .sign-wrapper {
+    width: 90%;
+}
   .chat-container.max-w-6xl.mx-auto.my-8.flex.rounded-xl.shadow-2xl.z-10.border-2.border-transparent.gradient-border {
     width: 95%;
     margin: 3vw auto;
