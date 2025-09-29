@@ -16,13 +16,16 @@ function Chat() {
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
   const currentUsername = localStorage.getItem('username');
+
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null); // Ref for file input
-  const [isOpen, setIsOpen] = useState(false);
+  const fileInputRef = useRef(null);
+  const [isUserListOpen, setIsUserListOpen] = useState(false); // Control user list visibility on mobile
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeout = useRef(null);
+
   const handleFileSelect = (e) => {
     setSelectedFile(e.target.files[0]);
+    console.log('Selected file:', e.target.files[0]?.name); // Debug log
   };
 
   const groupMessagesByDate = (messages) => {
@@ -62,6 +65,10 @@ function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const toggleUserList = () => {
+    setIsUserListOpen(!isUserListOpen);
+  };
+
   useEffect(() => {
     socket.on("userTyping", (data) => {
       if (data.senderId === selectedUser?._id) setIsTyping(true);
@@ -73,9 +80,9 @@ function Chat() {
       socket.off("userTyping");
       socket.off("userStopTyping");
     };
-  }, [selectedUser]); 
+  }, [selectedUser]);
 
-  useEffect(() => { 
+  useEffect(() => {
     if (window.particlesJS) {
       window.particlesJS('particles-js', {
         particles: {
@@ -150,6 +157,7 @@ function Chat() {
 
   const handleUserClick = async (user) => {
     setSelectedUser(user);
+    setIsUserListOpen(false); // Close user list on mobile after selection
     try {
       const response = await axios.get(`https://chatapp980.onrender.com/api/messages/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -201,20 +209,35 @@ function Chat() {
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
       <div id="particles-js" className="absolute inset-0 z-0"></div>
       <motion.div className="chat-container max-w-6xl mx-auto my-8 flex rounded-xl shadow-2xl z-10 border-2 border-transparent gradient-border">
+        {/* User List Toggle Icon (Mobile Only) */}
+        <div className="sm:hidden absolute top-4 left-4 z-20">
+          <button onClick={toggleUserList} className="text-white p-2 rounded-full bg-gray-700 hover:bg-gray-600">
+            {selectedUser ? (
+              <img
+                src={`https://picsum.photos/seed/${selectedUser._id}/35`}
+                alt={selectedUser.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <i className="fas fa-bars text-lg"></i>
+            )}
+          </button>
+        </div>
         {/* User List */}
-        <motion.div className="user-list bg-gray-800 p-6 rounded-l-xl">
-          <div className="flex items-center gap-3 mb-4 user-toggle">
+        <motion.div
+          className={`user-list bg-gray-800 p-6 rounded-l-xl sm:w-1/3 w-full absolute sm:static z-10 transition-all duration-300 sm:!translate-x-0 ${
+            isUserListOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-4">
             <img
               src={currentUserId ? `https://picsum.photos/seed/${currentUserId}/35` : 'default-avatar.png'}
               alt="me"
               className="w-12 h-12 rounded-full object-cover border border-gray-500"
             />
-            <h3 className="text-xl font-bold text-white mb-4 cursor-pointer sm:cursor-default flex items-center justify-between"
-              onClick={() => setIsOpen(!isOpen)}>
-              {currentUsername} <span className="sm:hidden">{isOpen ? "▲" : "▼"}</span>
-            </h3>
+            <h3 className="text-xl font-bold text-white flex-1">{currentUsername}</h3>
           </div>
-          <motion.div initial={false} animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }} transition={{ duration: 0.3 }} className="overflow-hidden sm:!h-auto sm:!opacity-100">
+          <motion.div animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             {users.map((user) => (
               <motion.div
                 key={user._id}
@@ -233,7 +256,7 @@ function Chat() {
           </motion.div>
         </motion.div>
         {/* Chat Box */}
-        <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col">
+        <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col flex-1">
           {selectedUser ? (
             <>
               <div className="flex items-center gap-3 mb-4">
@@ -241,7 +264,7 @@ function Chat() {
                 <img
                   src={`https://picsum.photos/seed/${selectedUser._id}/40`}
                   alt={selectedUser.username}
-                  className="w-12 h-12 rounded-full object-cover border border-gray-500 select-user"
+                  className="w-12 h-12 rounded-full object-cover border border-gray-500"
                 />
               </div>
               <div className="messages flex-grow overflow-y-auto bg-gray-700 rounded-lg p-4">
@@ -258,7 +281,7 @@ function Chat() {
                           {msg.fileUrl && (
                             (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)), // Enhanced debug log
                             msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
-                              <img src={msg.fileUrl} alt="uploaded" className="mt-2 max-w-xs rounded img-sent" onError={(e) => console.error('Image load error:', msg.fileUrl)} />
+                              <img src={msg.fileUrl} alt="uploaded" className="mt-2 max-w-xs rounded" onError={(e) => console.error('Image load error:', msg.fileUrl)} />
                             ) : (
                               <a href={msg.fileUrl} target="_blank" className="text-blue-400 underline mt-2 block">
                                 {msg.fileUrl.split('/').pop()}
@@ -285,9 +308,9 @@ function Chat() {
                   placeholder="Type a message..."
                   className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                 />
-                <button type="submit" className="bg-blue-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold">&gt;</button>
-                <label htmlFor="file-upload" className="bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600 upload-btn">
-                  <i className="fas fa-paperclip"></i>
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Send</button>
+                <label htmlFor="file-upload" className="bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600">
+                  <i className="fas fa-paperclip text-lg"></i>
                 </label>
                 <input
                   id="file-upload"

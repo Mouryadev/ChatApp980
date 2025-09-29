@@ -332,9 +332,9 @@ form.mt-4.flex.space-x-2 {
 }
   .messages {
     max-height: calc(100% - 80px);
-            overflow-x: hidden;
-            padding: 0 !IMPORTANT;
-  }
+    overflow-x: hidden;
+    padding: 0px 5px 0 5px!important;
+}
 }
 
 /* Sub-button (if needed) */
