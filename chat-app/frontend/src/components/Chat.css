@@ -295,7 +295,7 @@ img.mt-2.max-w-xs.rounded.img-sent {
   
 }
 .chat-header {
-    padding: 8px 10px 8px 60px;
+    padding: 8px 10px 8px 60px!IMPORTANT;
 }
 .upload-btn {
     padding: 6px 11px !IMPORTANT;
@@ -344,8 +344,11 @@ form.mt-4.flex.space-x-2 {
     margin: 0;
 }
 .user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all.bg-blue-600.text-white, .user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all {
-    padding: 5px 10px;
-    margin: 0;
+          margin: 5px;
+        padding: 7px 10px;
+}
+.user:last-child {
+    border: none;
 }
   .chat-box,
   .user-list {
