@@ -294,6 +294,9 @@ img.mt-2.max-w-xs.rounded.img-sent {
     padding: 0;
   
 }
+.chat-header {
+    padding: 8px 10px 8px 60px;
+}
 .upload-btn {
     padding: 6px 11px !IMPORTANT;
   
@@ -337,14 +340,18 @@ img.mt-2.max-w-xs.rounded.img-sent {
 }
 form.mt-4.flex.space-x-2 {
     background: none;
-    padding: 10px 0 !IMPORTANT;
+    padding: 0px 0!important;
+    margin: 0;
+}
+.user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all.bg-blue-600.text-white, .user.flex.items-center.gap-3.p-3.rounded-lg.cursor-pointer.text-gray-300.transition-all {
+    padding: 5px 10px;
+    margin: 0;
 }
   .chat-box,
   .user-list {
     width: 100%;
     max-width: none;
-    border-radius: 0;
-  }   
+        border-radius: 12px;  }   
   .user-list {
         padding:10px !IMPORTANT;
         border-right: none;

@@ -259,7 +259,7 @@ function Chat() {
         <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col flex-1">
           {selectedUser ? (
             <>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 chat-header">
                 <h3 className="text-xl font-bold text-white flex-1">Chat with {selectedUser.username}</h3>
                 <img
                   src={`https://picsum.photos/seed/${selectedUser._id}/40`}
