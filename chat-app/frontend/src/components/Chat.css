@@ -296,6 +296,9 @@ img.mt-2.max-w-xs.rounded.img-sent {
     background: transparent;
     backdrop-filter: blur(20px);
 }
+label.upload-btn.bg-gray-700.text-white.px-4.py-2.rounded-lg.cursor-pointer.flex.items-center.justify-center.border.border-gray-600.hover\:bg-gray-600 {
+    padding: 8px 14px!IMPORTANT;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .my-message {
