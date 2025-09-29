@@ -10,6 +10,8 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' }); // uploaded files stored here
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +25,7 @@ mongoose
     useUnifiedTopology: true,
   })  .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
+app.use('/uploads', express.static('uploads'));
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -37,8 +40,10 @@ const messageSchema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   content: String,
+  fileUrl: String, // new field
   timestamp: { type: Date, default: Date.now }
 });
+
 const Message = mongoose.model('Message', messageSchema);
 
 // Middleware to verify JWT
@@ -54,6 +59,16 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ message: 'No file uploaded' });
+
+  // Full URL for frontend
+  const fullUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+  res.json({ fileUrl: fullUrl });
+});
+
+
 // Signup
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
@@ -110,13 +125,14 @@ io.on('connection', (socket) => {
     socket.join(userId);
   });
 
-  socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
-    const message = new Message({ sender: senderId, receiver: receiverId, content });
-    await message.save();
-    const populatedMessage = await Message.findById(message._id).populate('sender', 'username').lean();
-    io.to(receiverId).emit('receiveMessage', populatedMessage);
-    io.to(senderId).emit('receiveMessage', populatedMessage);
-  });
+socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl }) => {
+  const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl });
+  await message.save();
+  const populatedMessage = await Message.findById(message._id).populate('sender', 'username').lean();
+  io.to(receiverId).emit('receiveMessage', populatedMessage);
+  io.to(senderId).emit('receiveMessage', populatedMessage);
+});
+
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
