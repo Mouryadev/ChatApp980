@@ -299,10 +299,66 @@ img.mt-2.max-w-xs.rounded.img-sent {
 label.upload-btn.bg-gray-700.text-white.px-4.py-2.rounded-lg.cursor-pointer.flex.items-center.justify-center.border.border-gray-600.hover\:bg-gray-600 {
     padding: 8px 14px!IMPORTANT;
 }
+/* Chat.css */
+.hidden {
+  display: none;
+}
+
+label[for="file-upload"] {
+  transition: background-color 0.2s;
+}
+
+label[for="file-upload"]:hover {
+  background-color: #4b5563;
+}
+
+.fas.fa-paperclip,
+.fas.fa-bars,
+.fas.fa-reply {
+  font-size: 1.25rem;
+}
+
+.user-list {
+  transition: all 0.3s ease-in-out;
+  transform-origin: left;
+}
+
+.chat-container {
+  position: relative;
+}
+
+.chat-box {
+  width: 100% !important;
+}
+
+/* Ensure "Reply" arrow button doesn't overlap content */
+.my-message .content-wrapper,
+.other-message .content-wrapper {
+  position: relative;
+  padding-right: 20px;
+}
+
+/* Style the quoted message box */
+.quote-box {
+  margin-bottom: 0.5rem;
+  border-left-width: 4px;
+  border-left-color: #60a5fa; /* blue-400 */
+  background-color: #4b5563; /* gray-600 */
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.quote-box strong {
+  color: #93c5fd; /* blue-300 */
+}
+
+.quote-box p {
+  margin-left: 0.5rem;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .my-message {
-
+    width: 83%;
     padding: 0;
   
 }

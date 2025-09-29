@@ -12,6 +12,7 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [quotedMessage, setQuotedMessage] = useState(null); // State for quote reply
   const token = localStorage.getItem('token');
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
@@ -19,13 +20,13 @@ function Chat() {
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [isUserListOpen, setIsUserListOpen] = useState(false); // Control user list visibility on mobile
+  const [isUserListOpen, setIsUserListOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeout = useRef(null);
 
   const handleFileSelect = (e) => {
     setSelectedFile(e.target.files[0]);
-    console.log('Selected file:', e.target.files[0]?.name); // Debug log
+    console.log('Selected file:', e.target.files[0]?.name);
   };
 
   const groupMessagesByDate = (messages) => {
@@ -69,6 +70,11 @@ function Chat() {
     setIsUserListOpen(!isUserListOpen);
   };
 
+  const handleQuoteReply = (msg) => {
+    setQuotedMessage(msg);
+    console.log('Quoted message set:', msg);
+  };
+
   useEffect(() => {
     socket.on("userTyping", (data) => {
       if (data.senderId === selectedUser?._id) setIsTyping(true);
@@ -76,11 +82,21 @@ function Chat() {
     socket.on("userStopTyping", (data) => {
       if (data.senderId === selectedUser?._id) setIsTyping(false);
     });
+    socket.on('receiveMessage', (newMessage) => {
+      console.log('Received message:', newMessage);
+      if (
+        (newMessage.sender._id === currentUserId && newMessage.receiver === selectedUser?._id) ||
+        (newMessage.sender._id === selectedUser?._id && newMessage.receiver === currentUserId)
+      ) {
+        setMessages((prev) => [...prev, newMessage]);
+      }
+    });
     return () => {
       socket.off("userTyping");
       socket.off("userStopTyping");
+      socket.off('receiveMessage');
     };
-  }, [selectedUser]);
+  }, [selectedUser, currentUserId]);
 
   useEffect(() => {
     if (window.particlesJS) {
@@ -141,27 +157,32 @@ function Chat() {
 
     if (currentUserId) socket.emit('join', currentUserId);
 
-    socket.on('receiveMessage', (newMessage) => {
-      if (
-        (newMessage.sender._id === currentUserId && newMessage.receiver === selectedUser?._id) ||
-        (newMessage.sender._id === selectedUser?._id && newMessage.receiver === currentUserId)
-      ) {
-        setMessages((prev) => [...prev, newMessage]);
+    const fetchMessages = async () => {
+      if (selectedUser) {
+        try {
+          const response = await axios.get(`https://chatapp980.onrender.com/api/messages/${selectedUser._id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('Fetched messages:', response.data);
+          setMessages(response.data);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+        }
       }
-    });
-
-    return () => socket.off('receiveMessage');
+    };
+    fetchMessages();
   }, [token, selectedUser, currentUserId]);
 
   useEffect(scrollToBottom, [messages]);
 
   const handleUserClick = async (user) => {
     setSelectedUser(user);
-    setIsUserListOpen(false); // Close user list on mobile after selection
+    setIsUserListOpen(false);
     try {
       const response = await axios.get(`https://chatapp980.onrender.com/api/messages/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Messages fetched on user click:', response.data);
       setMessages(response.data);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -184,7 +205,7 @@ function Chat() {
           }
         });
         fileUrl = response.data.fileUrl;
-        console.log('Uploaded fileUrl:', fileUrl); // Debug log
+        console.log('Uploaded fileUrl:', fileUrl);
       } catch (error) {
         console.error('File upload error:', error);
       }
@@ -194,14 +215,17 @@ function Chat() {
       senderId: currentUserId,
       receiverId: selectedUser._id,
       content: message,
-      fileUrl
+      fileUrl,
+      quotedMessageId: quotedMessage?._id // Link to the quoted message
     };
+    console.log('Sending message:', newMessage);
     socket.emit('sendMessage', newMessage);
 
     setMessage('');
     setSelectedFile(null);
+    setQuotedMessage(null); // Clear quoted message after sending
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Clear file input
+      fileInputRef.current.value = '';
     }
   };
 
@@ -241,7 +265,7 @@ function Chat() {
             {users.map((user) => (
               <motion.div
                 key={user._id}
-                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300 transition-all ${selectedUser?._id === user._id ? "bg-blue-600 text-white" : ""}`}
+                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300 transition-all ${selectedUser?._id === user._id ? 'bg-blue-600 text-white' : ''}`}
                 onClick={() => handleUserClick(user)}
                 whileTap={{ scale: 0.95 }}
               >
@@ -250,7 +274,7 @@ function Chat() {
                   alt="profile"
                   className="w-12 h-12 rounded-full object-cover border border-gray-500"
                 />
-                <span>{user.username}{user._id === currentUserId ? " (You)" : ""}</span>
+                <span>{user.username}{user._id === currentUserId ? ' (You)' : ''}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -272,14 +296,20 @@ function Chat() {
                   <div key={dateLabel}>
                     <div className="text-gray-400 text-xs text-center my-2">{dateLabel}</div>
                     {msgs.map((msg, index) => (
-                      <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? "justify-end flex-row-reverse" : "justify-start"}`}>
+                      <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? 'justify-end flex-row-reverse' : 'justify-start'} relative`}>
                         <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="profile-pic w-11 h-11 rounded-full object-cover border border-gray-500" />
-                        <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message text-white" : "other-message text-gray-200"}`}>
+                        <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? 'my-message text-white' : 'other-message text-gray-200'}`}>
+                          {msg.quotedMessageId && msg.quotedMessageId.content && (
+                            <div className="quote-box bg-gray-600 p-2 mb-2 rounded-lg border-l-4 border-blue-400 text-gray-100 italic">
+                              <strong className="text-blue-300">Quoted from {msg.quotedMessageId.sender.username}:</strong>
+                              <p className="ml-2">{msg.quotedMessageId.content}</p>
+                            </div>
+                          )}
                           <div className="content-wrapper">
                             <strong>{msg.sender.username}: </strong>{msg.content}
                           </div>
                           {msg.fileUrl && (
-                            (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)), // Enhanced debug log
+                            (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)),
                             msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
                               <img src={msg.fileUrl} alt="uploaded" className="mt-2 max-w-xs rounded" onError={(e) => console.error('Image load error:', msg.fileUrl)} />
                             ) : (
@@ -291,6 +321,12 @@ function Chat() {
                           <div className="text-xs text-gray-400 mt-1 text-right">
                             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
+                          <button
+                            onClick={() => handleQuoteReply(msg)}
+                            className="absolute top-2 right-2 text-blue-400 hover:text-blue-300"
+                          >
+                            <i className="fas fa-reply"></i>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -299,27 +335,40 @@ function Chat() {
                 {isTyping && <div className="text-gray-400 italic animate-pulse">{selectedUser.username} is typing...</div>}
                 <div ref={messagesEndRef} />
               </div>
-              <form onSubmit={handleSendMessage} className="mt-4 flex space-x-2">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onInput={handleTyping}
-                  placeholder="Type a message..."
-                  className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                />
-                <button type="submit" className="send-btn bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">&gt;</button>
-                <label htmlFor="file-upload" className="upload-btn bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600">
-                  <i className="fas fa-paperclip text-lg"></i>
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  onChange={handleFileSelect}
-                  ref={fileInputRef}
-                  className="hidden"
-                />
-              </form>
+              <div className="mt-4">
+                {quotedMessage && (
+                  <div className="bg-gray-600 p-2 rounded-lg mb-2 border-l-4 border-blue-500 text-gray-200 italic">
+                    <strong>{quotedMessage.sender.username}:</strong> {quotedMessage.content}
+                    <button
+                      onClick={() => setQuotedMessage(null)}
+                      className="ml-2 text-red-400 hover:underline text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                <form onSubmit={handleSendMessage} className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onInput={handleTyping}
+                    placeholder="Type a message..."
+                    className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                  />
+                  <button type="submit" className="send-btn bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">&gt;</button>
+                  <label htmlFor="file-upload" className="upload-btn bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600">
+                    <i className="fas fa-paperclip text-lg"></i>
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    onChange={handleFileSelect}
+                    ref={fileInputRef}
+                    className="hidden"
+                  />
+                </form>
+              </div>
             </>
           ) : (
             <p className="text-gray-400 text-center flex-grow flex items-center justify-center">Select a user to start chatting</p>
