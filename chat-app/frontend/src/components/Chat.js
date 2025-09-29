@@ -11,24 +11,22 @@ function Chat() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const token = localStorage.getItem('token');
-const [selectedFile, setSelectedFile] = useState(null);
-const handleFileSelect = (e) => {
-  setSelectedFile(e.target.files[0]);
-};
-
-  // Get logged-in user info from token
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
   const currentUsername = localStorage.getItem('username');
-
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null); // Ref for file input
   const [isOpen, setIsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeout = useRef(null);
+  const handleFileSelect = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
+
   const groupMessagesByDate = (messages) => {
     const grouped = {};
-
     messages.forEach((msg) => {
       const msgDate = new Date(msg.timestamp);
       const today = new Date();
@@ -36,25 +34,21 @@ const handleFileSelect = (e) => {
       yesterday.setDate(today.getDate() - 1);
 
       let dateLabel = msgDate.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
-
       if (msgDate.toDateString() === today.toDateString()) dateLabel = "Today";
       else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = "Yesterday";
 
       if (!grouped[dateLabel]) grouped[dateLabel] = [];
       grouped[dateLabel].push(msg);
     });
-
-    return grouped; // { "Today": [...], "Yesterday": [...], "23 Sep 2025": [...] }
+    return grouped;
   };
 
   const handleTyping = () => {
     if (!selectedUser) return;
-
     socket.emit("typing", {
       senderId: currentUserId,
       receiverId: selectedUser._id,
     });
-
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       socket.emit("stopTyping", {
@@ -79,27 +73,27 @@ const handleFileSelect = (e) => {
       socket.off("userTyping");
       socket.off("userStopTyping");
     };
-  }, [selectedUser]);
+  }, [selectedUser]); 
 
-  useEffect(() => {
+  useEffect(() => { 
     if (window.particlesJS) {
       window.particlesJS('particles-js', {
         particles: {
           number: { value: 110, density: { enable: true, value_area: 800 } },
-          color: { value: ['#87eefb', '#aeeffb', '#4db8ff'] }, // soft gradient shades
+          color: { value: ['#87eefb', '#aeeffb', '#4db8ff'] },
           shape: { type: 'circle' },
-          opacity: { value: 0.25, random: true }, // soft & varied
-          size: { value: 3, random: true }, // some small, some medium
+          opacity: { value: 0.25, random: true },
+          size: { value: 3, random: true },
           line_linked: {
             enable: true,
             distance: 150,
             color: '#87eefb',
-            opacity: 0.2, // very soft lines
+            opacity: 0.2,
             width: 1
           },
           move: {
             enable: true,
-            speed: 0.8, // smoother, slower movement
+            speed: 0.8,
             direction: 'none',
             random: true,
             straight: false,
@@ -115,7 +109,7 @@ const handleFileSelect = (e) => {
           modes: {
             grab: {
               distance: 170,
-              line_linked: { opacity: 0.6, color: '#87eefb' } // subtle highlight on hover
+              line_linked: { opacity: 0.6, color: '#87eefb' }
             },
             push: { particles_nb: 4 }
           }
@@ -124,7 +118,6 @@ const handleFileSelect = (e) => {
       });
     }
   }, []);
-
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -167,45 +160,47 @@ const handleFileSelect = (e) => {
     }
   };
 
-const handleSendMessage = async (e) => {
-  e.preventDefault();
-  if (!message.trim() && !selectedFile) return;
-  let fileUrl = null;
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!message.trim() && !selectedFile) return;
+    let fileUrl = null;
 
-  if (selectedFile) {
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    try {
-      const response = await axios.post('https://chatapp980.onrender.com/api/upload', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      fileUrl = response.data.fileUrl;
-    } catch (error) {
-      console.error('File upload error:', error);
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      try {
+        const response = await axios.post('https://chatapp980.onrender.com/api/upload', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        fileUrl = response.data.fileUrl;
+        console.log('Uploaded fileUrl:', fileUrl); // Debug log
+      } catch (error) {
+        console.error('File upload error:', error);
+      }
     }
-  }
 
-  const newMessage = {
-    senderId: currentUserId,
-    receiverId: selectedUser._id,
-    content: message,
-    fileUrl // include fileUrl if file was uploaded
+    const newMessage = {
+      senderId: currentUserId,
+      receiverId: selectedUser._id,
+      content: message,
+      fileUrl
+    };
+    socket.emit('sendMessage', newMessage);
+
+    setMessage('');
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Clear file input
+    }
   };
-  socket.emit('sendMessage', newMessage);
-
-  setMessage('');
-  setSelectedFile(null);
-};
-
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
       <div id="particles-js" className="absolute inset-0 z-0"></div>
       <motion.div className="chat-container max-w-6xl mx-auto my-8 flex rounded-xl shadow-2xl z-10 border-2 border-transparent gradient-border">
-
         {/* User List */}
         <motion.div className="user-list bg-gray-800 p-6 rounded-l-xl">
           <div className="flex items-center gap-3 mb-4 user-toggle">
@@ -219,15 +214,12 @@ const handleSendMessage = async (e) => {
               {currentUsername} <span className="sm:hidden">{isOpen ? "▲" : "▼"}</span>
             </h3>
           </div>
-
           <motion.div initial={false} animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }} transition={{ duration: 0.3 }} className="overflow-hidden sm:!h-auto sm:!opacity-100">
             {users.map((user) => (
               <motion.div
                 key={user._id}
-                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300  transition-all ${selectedUser?._id === user._id ? "bg-blue-600 text-white" : ""
-                  }`}
+                className={`user flex items-center gap-3 p-3 rounded-lg cursor-pointer text-gray-300 transition-all ${selectedUser?._id === user._id ? "bg-blue-600 text-white" : ""}`}
                 onClick={() => handleUserClick(user)}
-
                 whileTap={{ scale: 0.95 }}
               >
                 <img
@@ -240,7 +232,6 @@ const handleSendMessage = async (e) => {
             ))}
           </motion.div>
         </motion.div>
-
         {/* Chat Box */}
         <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col">
           {selectedUser ? (
@@ -250,51 +241,41 @@ const handleSendMessage = async (e) => {
                 <img
                   src={`https://picsum.photos/seed/${selectedUser._id}/40`}
                   alt={selectedUser.username}
-                  className="w-12 h-12 rounded-full object-cover border border-gray-500"
+                  className="w-12 h-12 rounded-full object-cover border border-gray-500 select-user"
                 />
               </div>
-
               <div className="messages flex-grow overflow-y-auto bg-gray-700 rounded-lg p-4">
                 {Object.entries(groupMessagesByDate(messages)).map(([dateLabel, msgs]) => (
                   <div key={dateLabel}>
-                    {/* Date label at top center */}
                     <div className="text-gray-400 text-xs text-center my-2">{dateLabel}</div>
-
-                  {msgs.map((msg, index) => (
-  <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? "justify-end flex-row-reverse" : "justify-start"}`}>
-    <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="w-11 h-11 rounded-full object-cover border border-gray-500" />
-    <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message text-white" : "other-message text-gray-200"}`}>
-      <div className="content-wrapper">
-        <strong>{msg.sender.username}: </strong>{msg.content}
-      </div>
-
-      {/* File Display */}
-      {msg.fileUrl && (
-        msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/) ? (
-          <img src={`https://chatapp980.onrender.com${msg.fileUrl}`} alt="uploaded" className="mt-2 max-w-xs rounded" />
-        ) : (
-          <a href={`https://chatapp980.onrender.com${msg.fileUrl}`} target="_blank" className="text-blue-400 underline mt-2 block">
-            {msg.fileUrl.split('/').pop()}
-          </a>
-        )
-      )}
-
-      <div className="text-xs text-gray-400 mt-1 text-right">
-        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-      </div>
-    </div>
-  </div>
-))}
-
+                    {msgs.map((msg, index) => (
+                      <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? "justify-end flex-row-reverse" : "justify-start"}`}>
+                        <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="w-11 h-11 rounded-full object-cover border border-gray-500" />
+                        <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message text-white" : "other-message text-gray-200"}`}>
+                          <div className="content-wrapper">
+                            <strong>{msg.sender.username}: </strong>{msg.content}
+                          </div>
+                          {msg.fileUrl && (
+                            (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)), // Enhanced debug log
+                            msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
+                              <img src={msg.fileUrl} alt="uploaded" className="mt-2 max-w-xs rounded img-sent" onError={(e) => console.error('Image load error:', msg.fileUrl)} />
+                            ) : (
+                              <a href={msg.fileUrl} target="_blank" className="text-blue-400 underline mt-2 block">
+                                {msg.fileUrl.split('/').pop()}
+                              </a>
+                            )
+                          )}
+                          <div className="text-xs text-gray-400 mt-1 text-right">
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
-
-                {isTyping && <div className="text-gray-300 italic animate-pulse">{selectedUser.username} is typing...</div>}
+                {isTyping && <div className="text-gray-400 italic animate-pulse">{selectedUser.username} is typing...</div>}
                 <div ref={messagesEndRef} />
               </div>
-
-
-
               <form onSubmit={handleSendMessage} className="mt-4 flex space-x-2">
                 <input
                   type="text"
@@ -304,13 +285,17 @@ const handleSendMessage = async (e) => {
                   placeholder="Type a message..."
                   className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                 />
-                <button type="submit" className="bg-blue-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold">Send</button>
+                <button type="submit" className="bg-blue-600 sub-btn text-white px-4 py-2 rounded-lg font-semibold">&gt;</button>
+                <label htmlFor="file-upload" className="bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600 upload-btn">
+                  <i className="fas fa-paperclip"></i>
+                </label>
                 <input
+                  id="file-upload"
                   type="file"
                   onChange={handleFileSelect}
-                  className="px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer"
+                  ref={fileInputRef}
+                  className="hidden"
                 />
-
               </form>
             </>
           ) : (

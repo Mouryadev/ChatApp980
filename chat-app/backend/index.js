@@ -5,16 +5,31 @@ const jwt = require('jsonwebtoken');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer to preserve file extensions
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase(); // Ensure lowercase extension
+    cb(null, `${uniqueSuffix}${ext}`);
+  }
+});
+const upload = multer({ storage: storage });
+
 require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // uploaded files stored here
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // MongoDB Connection
 const MONGO_URI =
@@ -23,9 +38,9 @@ mongoose
   .connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  })  .then(() => console.log('MongoDB connected'))
+  })
+  .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
-app.use('/uploads', express.static('uploads'));
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -34,16 +49,14 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-
 // Message Schema
 const messageSchema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   content: String,
-  fileUrl: String, // new field
+  fileUrl: String,
   timestamp: { type: Date, default: Date.now }
 });
-
 const Message = mongoose.model('Message', messageSchema);
 
 // Middleware to verify JWT
@@ -63,11 +76,11 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'No file uploaded' });
 
-  // Full URL for frontend
-  const fullUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+  const baseUrl = process.env.BASE_URL || 'https://chatapp980.onrender.com';
+  const fullUrl = `${baseUrl}/uploads/${file.filename}`;
+  console.log('Generated fileUrl:', fullUrl); // Debug log
   res.json({ fileUrl: fullUrl });
 });
-
 
 // Signup
 app.post('/api/signup', async (req, res) => {
@@ -114,25 +127,26 @@ app.get('/api/messages/:receiverId', authenticateToken, async (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-    socket.on("typing", ({ senderId, receiverId }) => {
+  socket.on("typing", ({ senderId, receiverId }) => {
     io.to(receiverId).emit("userTyping", { senderId });
   });
 
   socket.on("stopTyping", ({ senderId, receiverId }) => {
     io.to(receiverId).emit("userStopTyping", { senderId });
   });
+
   socket.on('join', (userId) => {
     socket.join(userId);
   });
 
-socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl }) => {
-  const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl });
-  await message.save();
-  const populatedMessage = await Message.findById(message._id).populate('sender', 'username').lean();
-  io.to(receiverId).emit('receiveMessage', populatedMessage);
-  io.to(senderId).emit('receiveMessage', populatedMessage);
-});
-
+  socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl }) => {
+    console.log('Received fileUrl:', fileUrl); // Debug log
+    const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl });
+    await message.save();
+    const populatedMessage = await Message.findById(message._id).populate('sender', 'username').lean();
+    io.to(receiverId).emit('receiveMessage', populatedMessage);
+    io.to(senderId).emit('receiveMessage', populatedMessage);
+  });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
