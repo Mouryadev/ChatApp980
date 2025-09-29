@@ -308,7 +308,7 @@ function Chat() {
                   placeholder="Type a message..."
                   className="flex-grow px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                 />
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">&gt;</button>
+                <button type="submit" className="send-btn bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">&gt;</button>
                 <label htmlFor="file-upload" className="upload-btn bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center border border-gray-600 hover:bg-gray-600">
                   <i className="fas fa-paperclip text-lg"></i>
                 </label>

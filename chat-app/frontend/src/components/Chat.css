@@ -287,6 +287,11 @@ button.bg-blue-600.sub-btn.text-white.px-4.py-2.rounded-lg.font-semibold {
 img.mt-2.max-w-xs.rounded.img-sent {
     width: 100%;
 }
+.send-btn {
+    font-family: cursive;
+    font-size: 20px;
+    
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .my-message {
@@ -296,6 +301,10 @@ img.mt-2.max-w-xs.rounded.img-sent {
 }
 .chat-header {
     padding: 8px 10px 8px 60px!IMPORTANT;
+}
+.send-btn {
+    
+    padding: 5px 13px;
 }
 .upload-btn {
     padding: 6px 11px !IMPORTANT;
