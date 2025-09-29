@@ -304,7 +304,7 @@ img.mt-2.max-w-xs.rounded.img-sent {
 }
 .send-btn {
     
-    padding: 5px 13px;
+    padding: 5px 13px  !important;
 }
 .upload-btn {
     padding: 6px 11px !IMPORTANT;
