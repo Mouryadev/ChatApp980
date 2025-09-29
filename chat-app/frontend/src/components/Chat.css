@@ -362,6 +362,12 @@ label[for="file-upload"]:hover {
     padding: 0;
   
 }
+form.flex.space-x-2 {
+    background: transparent;
+}
+label.upload-btn.bg-gray-700.text-white.px-4.py-2.rounded-lg.cursor-pointer.flex.items-center.justify-center.border.border-gray-600.hover\:bg-gray-600 {
+    padding: 6px 11px!important;
+}
 .chat-header {
     padding: 8px 10px 8px 60px!IMPORTANT;
 }
