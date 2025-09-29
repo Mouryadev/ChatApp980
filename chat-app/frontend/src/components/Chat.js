@@ -273,7 +273,7 @@ function Chat() {
                     <div className="text-gray-400 text-xs text-center my-2">{dateLabel}</div>
                     {msgs.map((msg, index) => (
                       <div key={index} className={`flex items-start gap-2 mb-3 ${msg.sender.username === currentUsername ? "justify-end flex-row-reverse" : "justify-start"}`}>
-                        <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="w-11 h-11 rounded-full object-cover border border-gray-500" />
+                        <img src={`https://picsum.photos/seed/${msg.sender._id}/35`} alt="profile" className="profile-pic w-11 h-11 rounded-full object-cover border border-gray-500" />
                         <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? "my-message text-white" : "other-message text-gray-200"}`}>
                           <div className="content-wrapper">
                             <strong>{msg.sender.username}: </strong>{msg.content}
