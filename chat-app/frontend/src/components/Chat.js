@@ -13,7 +13,7 @@ function Chat() {
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [quotedMessage, setQuotedMessage] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [onlineUsers, setOnlineUsers] = useState(new Set()); // Track online users
   const token = localStorage.getItem('token');
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
@@ -77,6 +77,7 @@ function Chat() {
   };
 
   useEffect(() => {
+    // Mark messages as seen when viewing chat
     if (selectedUser) {
       socket.emit('messageSeen', {
         senderId: selectedUser._id,
@@ -96,51 +97,27 @@ function Chat() {
         (newMessage.sender._id === currentUserId && newMessage.receiver === selectedUser?._id) ||
         (newMessage.sender._id === selectedUser?._id && newMessage.receiver === currentUserId)
       ) {
-        setMessages((prev) => {
-          const updatedMessages = [...prev, { ...newMessage, delivered: true }];
-          console.log('Updated messages with new message:', updatedMessages);
-          return updatedMessages;
-        });
-        if (newMessage.sender._id !== currentUserId) {
-          socket.emit('messageDelivered', {
-            messageId: newMessage._id,
-            senderId: newMessage.sender._id,
-            receiverId: currentUserId,
-          });
-        }
+        setMessages((prev) => [...prev, newMessage]);
       }
     });
     socket.on('onlineUsers', (onlineUsersArray) => {
       setOnlineUsers(new Set(onlineUsersArray));
-      console.log('Online users updated:', onlineUsersArray);
-    });
-    socket.on('messageDelivered', ({ messageId }) => {
-      setMessages((prev) => {
-        const updatedMessages = prev.map((msg) =>
-          msg._id === messageId ? { ...msg, delivered: true } : msg
-        );
-        console.log('Message marked as delivered:', messageId, updatedMessages);
-        return updatedMessages;
-      });
     });
     socket.on('messageSeen', ({ messageIds }) => {
-      setMessages((prev) => {
-        const updatedMessages = prev.map((msg) =>
-          messageIds.includes(msg._id) ? { ...msg, seen: true, delivered: true } : msg
-        );
-        console.log('Messages marked as seen:', messageIds, updatedMessages);
-        return updatedMessages;
-      });
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.includes(msg._id) ? { ...msg, seen: true } : msg
+        )
+      );
     });
     return () => {
       socket.off("userTyping");
       socket.off("userStopTyping");
       socket.off('receiveMessage');
       socket.off('onlineUsers');
-      socket.off('messageDelivered');
       socket.off('messageSeen');
     };
-  }, [selectedUser, messages, currentUserId]);
+  }, [selectedUser, currentUserId]);
 
   useEffect(() => {
     if (window.particlesJS) {
@@ -209,10 +186,6 @@ function Chat() {
           });
           console.log('Fetched messages:', response.data);
           setMessages(response.data);
-          socket.emit('messageSeen', {
-            senderId: selectedUser._id,
-            receiverId: currentUserId,
-          });
         } catch (error) {
           console.error('Error fetching messages:', error);
         }
@@ -232,6 +205,7 @@ function Chat() {
       });
       console.log('Messages fetched on user click:', response.data);
       setMessages(response.data);
+      // Emit messageSeen when user clicks to view chat
       socket.emit('messageSeen', {
         senderId: user._id,
         receiverId: currentUserId,
@@ -269,11 +243,9 @@ function Chat() {
       content: message,
       fileUrl,
       quotedMessageId: quotedMessage?._id,
-      seen: false,
-      delivered: false,
+      seen: false, // Initialize as not seen
     };
     console.log('Sending message:', newMessage);
-    setMessages((prev) => [...prev, { ...newMessage, _id: `temp-${Date.now()}`, sender: { _id: currentUserId, username: currentUsername } }]);
     socket.emit('sendMessage', newMessage);
 
     setMessage('');
@@ -288,6 +260,7 @@ function Chat() {
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
       <div id="particles-js" className="absolute inset-0 z-0"></div>
       <motion.div className="chat-container max-w-6xl mx-auto my-8 flex rounded-xl shadow-2xl z-10 border-2 border-transparent gradient-border">
+        {/* User List Toggle Icon (Mobile Only) */}
         <div className="sm:hidden absolute top-4 left-4 z-20">
           <button onClick={toggleUserList} className="text-white p-2 rounded-full bg-gray-700 hover:bg-gray-600">
             {selectedUser ? (
@@ -301,6 +274,7 @@ function Chat() {
             )}
           </button>
         </div>
+        {/* User List */}
         <motion.div
           className={`user-list bg-gray-800 p-6 rounded-l-xl sm:w-1/3 w-full absolute sm:static z-10 transition-all duration-300 sm:!translate-x-0 ${
             isUserListOpen ? 'translate-x-0' : '-translate-x-full'
@@ -337,6 +311,7 @@ function Chat() {
             ))}
           </motion.div>
         </motion.div>
+        {/* Chat Box */}
         <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col flex-1">
           {selectedUser ? (
             <>
@@ -386,8 +361,6 @@ function Chat() {
                               <span className="ml-1">
                                 {msg.seen ? (
                                   <i className="fas fa-check-double text-blue-400"></i>
-                                ) : msg.delivered ? (
-                                  <i className="fas fa-check-double text-gray-400"></i>
                                 ) : (
                                   <i className="fas fa-check text-gray-400"></i>
                                 )}

@@ -8,6 +8,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 
+// Configure multer to preserve file extensions
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -28,8 +29,9 @@ const io = socketIo(server, { cors: { origin: '*' } });
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('Uploads'));
+app.use('/uploads', express.static('uploads'));
 
+// MongoDB Connection
 const MONGO_URI =
   "mongodb+srv://mouryapooja980:Mourya980%40@chatapp.vuwmqvf.mongodb.net/chat-app?retryWrites=true&w=majority";
 mongoose
@@ -40,12 +42,14 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
+// User Schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true }
 });
 const User = mongoose.model('User', userSchema);
 
+// Message Schema
 const messageSchema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -54,10 +58,11 @@ const messageSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
   quotedMessageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
   seen: { type: Boolean, default: false },
-  delivered: { type: Boolean, default: false }
+  delivered: { type: Boolean, default: false } // New field for delivery status
 });
 const Message = mongoose.model('Message', messageSchema);
 
+// Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Access denied' });
@@ -69,6 +74,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Routes
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'No file uploaded' });
@@ -79,6 +85,7 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
   res.json({ fileUrl: fullUrl });
 });
 
+// Signup
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -91,6 +98,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+// Signin
 app.post('/api/signin', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -101,11 +109,13 @@ app.post('/api/signin', async (req, res) => {
   res.json({ token, username });
 });
 
+// Get all users
 app.get('/api/users', authenticateToken, async (req, res) => {
   const users = await User.find({}, 'username').lean();
   res.json(users.filter(user => user._id.toString() !== req.user.id));
 });
 
+// Get messages between two users
 app.get('/api/messages/:receiverId', authenticateToken, async (req, res) => {
   const messages = await Message.find({
     $or: [
@@ -117,6 +127,7 @@ app.get('/api/messages/:receiverId', authenticateToken, async (req, res) => {
   res.json(messages);
 });
 
+// Track online users
 const onlineUsers = new Set();
 
 io.on('connection', (socket) => {
@@ -145,10 +156,10 @@ io.on('connection', (socket) => {
     console.log('Populated message sent:', populatedMessage);
     io.to(receiverId).emit('receiveMessage', populatedMessage);
     io.to(senderId).emit('receiveMessage', populatedMessage);
+    // Emit delivered event to sender if receiver is online
     if (onlineUsers.has(receiverId)) {
       await Message.updateOne({ _id: message._id }, { $set: { delivered: true } });
       io.to(senderId).emit('messageDelivered', { messageId: message._id });
-      console.log('Message marked as delivered:', message._id);
     }
   });
 
@@ -164,20 +175,13 @@ io.on('connection', (socket) => {
       receiver: receiverId,
       seen: false
     });
-    const messageIds = messages.map(msg => msg._id.toString());
-    if (messageIds.length > 0) {
-      await Message.updateMany(
-        { _id: { $in: messageIds } },
-        { $set: { seen: true, delivered: true } }
-      );
-      io.to(senderId).emit('messageSeen', { messageIds });
-      console.log('Messages marked as seen:', messageIds);
-      const updatedMessages = await Message.find({ _id: { $in: messageIds } })
-        .populate('sender', 'username')
-        .populate('quotedMessageId', 'content sender')
-        .lean();
-      io.to(receiverId).emit('receiveMessage', updatedMessages);
-    }
+    const messageIds = messages.map(msg => msg._id);
+    await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { $set: { seen: true, delivered: true } }
+    );
+    io.to(senderId).emit('messageSeen', { messageIds });
+    console.log('Messages marked as seen:', messageIds);
   });
 
   socket.on('disconnect', () => {
