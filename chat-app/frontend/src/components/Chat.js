@@ -356,10 +356,19 @@ socket.emit('sendMessage', newMessage);
                               <p className="ml-2">{msg.quotedMessageId.content}</p>
                             </div>
                           )}
+                          <div className="content-wrapper-outer">
+
                           <div className="content-wrapper">
 
                             <strong>{msg.sender.username}: </strong>{msg.content}
                           </div>
+                           <button
+                            onClick={() => handleQuoteReply(msg)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            <i className="fas fa-reply"></i>
+                          </button>
+</div>
                           {msg.fileUrl && (
                             (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)),
                               msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
@@ -385,12 +394,7 @@ socket.emit('sendMessage', newMessage);
                             )}
 
                           </div>
-                          <button
-                            onClick={() => handleQuoteReply(msg)}
-                            className="text-blue-400 hover:text-blue-300"
-                          >
-                            <i className="fas fa-reply"></i>
-                          </button>
+                         
                         </div>
                       </div>
                     ))}

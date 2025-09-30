@@ -369,7 +369,13 @@ form.flex.space-x-2 {
     display: flex;
     flex-direction: column;
     align-items: self-start;
-    gap: 10px;
+    gap: 7px;
+}
+.my-message {
+    display: flex;
+    flex-direction: column;
+    align-items: self-end;
+    
 }
 /* Responsive Design */
 @media (max-width: 768px) {
