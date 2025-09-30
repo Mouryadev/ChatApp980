@@ -8,14 +8,13 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 
-// Configure multer to preserve file extensions
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase(); // Ensure lowercase extension
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, `${uniqueSuffix}${ext}`);
   }
 });
@@ -29,9 +28,8 @@ const io = socketIo(server, { cors: { origin: '*' } });
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('Uploads'));
 
-// MongoDB Connection
 const MONGO_URI =
   "mongodb+srv://mouryapooja980:Mourya980%40@chatapp.vuwmqvf.mongodb.net/chat-app?retryWrites=true&w=majority";
 mongoose
@@ -42,24 +40,24 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
-// User Schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true }
 });
 const User = mongoose.model('User', userSchema);
 
-// Message Schema
 const messageSchema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   content: String,
   fileUrl: String,
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
+  quotedMessageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
+  seen: { type: Boolean, default: false },
+  delivered: { type: Boolean, default: false }
 });
 const Message = mongoose.model('Message', messageSchema);
 
-// Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Access denied' });
@@ -71,18 +69,16 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Routes
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'No file uploaded' });
 
   const baseUrl = process.env.BASE_URL || 'https://chatapp980.onrender.com';
   const fullUrl = `${baseUrl}/uploads/${file.filename}`;
-  console.log('Generated fileUrl:', fullUrl); // Debug log
+  console.log('Generated fileUrl:', fullUrl);
   res.json({ fileUrl: fullUrl });
 });
 
-// Signup
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -95,7 +91,6 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// Signin
 app.post('/api/signin', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -106,26 +101,33 @@ app.post('/api/signin', async (req, res) => {
   res.json({ token, username });
 });
 
-// Get all users
 app.get('/api/users', authenticateToken, async (req, res) => {
   const users = await User.find({}, 'username').lean();
   res.json(users.filter(user => user._id.toString() !== req.user.id));
 });
 
-// Get messages between two users
 app.get('/api/messages/:receiverId', authenticateToken, async (req, res) => {
   const messages = await Message.find({
     $or: [
       { sender: req.user.id, receiver: req.params.receiverId },
       { sender: req.params.receiverId, receiver: req.user.id }
     ]
-  }).populate('sender', 'username').lean();
+  }).populate('sender', 'username').populate('quotedMessageId', 'content sender').lean();
+  console.log('API response for messages:', messages);
   res.json(messages);
 });
 
-// Socket.IO for real-time chat
+const onlineUsers = new Set();
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.join(userId);
+    onlineUsers.add(userId);
+    io.emit('onlineUsers', Array.from(onlineUsers));
+    console.log('Online users:', Array.from(onlineUsers));
+  });
 
   socket.on("typing", ({ senderId, receiverId }) => {
     io.to(receiverId).emit("userTyping", { senderId });
@@ -135,21 +137,59 @@ io.on('connection', (socket) => {
     io.to(receiverId).emit("userStopTyping", { senderId });
   });
 
-  socket.on('join', (userId) => {
-    socket.join(userId);
-  });
-
-  socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl }) => {
-    console.log('Received fileUrl:', fileUrl); // Debug log
-    const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl });
+  socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl, quotedMessageId, seen, delivered }) => {
+    console.log('Received message data:', { senderId, receiverId, content, fileUrl, quotedMessageId, seen, delivered });
+    const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl, quotedMessageId, seen, delivered });
     await message.save();
-    const populatedMessage = await Message.findById(message._id).populate('sender', 'username').lean();
+    const populatedMessage = await Message.findById(message._id).populate('sender', 'username').populate('quotedMessageId', 'content sender').lean();
+    console.log('Populated message sent:', populatedMessage);
     io.to(receiverId).emit('receiveMessage', populatedMessage);
     io.to(senderId).emit('receiveMessage', populatedMessage);
+    if (onlineUsers.has(receiverId)) {
+      await Message.updateOne({ _id: message._id }, { $set: { delivered: true } });
+      io.to(senderId).emit('messageDelivered', { messageId: message._id });
+      console.log('Message marked as delivered:', message._id);
+    }
+  });
+
+  socket.on('messageDelivered', async ({ messageId, senderId, receiverId }) => {
+    await Message.updateOne({ _id: messageId }, { $set: { delivered: true } });
+    io.to(senderId).emit('messageDelivered', { messageId });
+    console.log('Message marked as delivered:', messageId);
+  });
+
+  socket.on('messageSeen', async ({ senderId, receiverId }) => {
+    const messages = await Message.find({
+      sender: senderId,
+      receiver: receiverId,
+      seen: false
+    });
+    const messageIds = messages.map(msg => msg._id.toString());
+    if (messageIds.length > 0) {
+      await Message.updateMany(
+        { _id: { $in: messageIds } },
+        { $set: { seen: true, delivered: true } }
+      );
+      io.to(senderId).emit('messageSeen', { messageIds });
+      console.log('Messages marked as seen:', messageIds);
+      const updatedMessages = await Message.find({ _id: { $in: messageIds } })
+        .populate('sender', 'username')
+        .populate('quotedMessageId', 'content sender')
+        .lean();
+      io.to(receiverId).emit('receiveMessage', updatedMessages);
+    }
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    for (let userId of onlineUsers) {
+      if (socket.rooms.has(userId)) {
+        onlineUsers.delete(userId);
+        io.emit('onlineUsers', Array.from(onlineUsers));
+        console.log('Online users after disconnect:', Array.from(onlineUsers));
+        break;
+      }
+    }
   });
 });
 

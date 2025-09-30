@@ -12,7 +12,8 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [quotedMessage, setQuotedMessage] = useState(null); // State for quote reply
+  const [quotedMessage, setQuotedMessage] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
   const token = localStorage.getItem('token');
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
@@ -76,6 +77,13 @@ function Chat() {
   };
 
   useEffect(() => {
+    if (selectedUser) {
+      socket.emit('messageSeen', {
+        senderId: selectedUser._id,
+        receiverId: currentUserId,
+      });
+    }
+
     socket.on("userTyping", (data) => {
       if (data.senderId === selectedUser?._id) setIsTyping(true);
     });
@@ -88,13 +96,49 @@ function Chat() {
         (newMessage.sender._id === currentUserId && newMessage.receiver === selectedUser?._id) ||
         (newMessage.sender._id === selectedUser?._id && newMessage.receiver === currentUserId)
       ) {
-        setMessages((prev) => [...prev, newMessage]);
+        setMessages((prev) => {
+          const updatedMessages = [...prev, { ...newMessage, delivered: true }];
+          console.log('Updated messages with new message:', updatedMessages);
+          return updatedMessages;
+        });
+        if (newMessage.sender._id !== currentUserId) {
+          socket.emit('messageDelivered', {
+            messageId: newMessage._id,
+            senderId: newMessage.sender._id,
+            receiverId: currentUserId,
+          });
+        }
       }
+    });
+    socket.on('onlineUsers', (onlineUsersArray) => {
+      setOnlineUsers(new Set(onlineUsersArray));
+      console.log('Online users updated:', onlineUsersArray);
+    });
+    socket.on('messageDelivered', ({ messageId }) => {
+      setMessages((prev) => {
+        const updatedMessages = prev.map((msg) =>
+          msg._id === messageId ? { ...msg, delivered: true } : msg
+        );
+        console.log('Message marked as delivered:', messageId, updatedMessages);
+        return updatedMessages;
+      });
+    });
+    socket.on('messageSeen', ({ messageIds }) => {
+      setMessages((prev) => {
+        const updatedMessages = prev.map((msg) =>
+          messageIds.includes(msg._id) ? { ...msg, seen: true, delivered: true } : msg
+        );
+        console.log('Messages marked as seen:', messageIds, updatedMessages);
+        return updatedMessages;
+      });
     });
     return () => {
       socket.off("userTyping");
       socket.off("userStopTyping");
       socket.off('receiveMessage');
+      socket.off('onlineUsers');
+      socket.off('messageDelivered');
+      socket.off('messageSeen');
     };
   }, [selectedUser, currentUserId]);
 
@@ -165,6 +209,10 @@ function Chat() {
           });
           console.log('Fetched messages:', response.data);
           setMessages(response.data);
+          socket.emit('messageSeen', {
+            senderId: selectedUser._id,
+            receiverId: currentUserId,
+          });
         } catch (error) {
           console.error('Error fetching messages:', error);
         }
@@ -184,6 +232,10 @@ function Chat() {
       });
       console.log('Messages fetched on user click:', response.data);
       setMessages(response.data);
+      socket.emit('messageSeen', {
+        senderId: user._id,
+        receiverId: currentUserId,
+      });
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -216,14 +268,17 @@ function Chat() {
       receiverId: selectedUser._id,
       content: message,
       fileUrl,
-      quotedMessageId: quotedMessage?._id // Link to the quoted message
+      quotedMessageId: quotedMessage?._id,
+      seen: false,
+      delivered: false,
     };
     console.log('Sending message:', newMessage);
+    setMessages((prev) => [...prev, { ...newMessage, _id: `temp-${Date.now()}`, sender: { _id: currentUserId, username: currentUsername } }]);
     socket.emit('sendMessage', newMessage);
 
     setMessage('');
     setSelectedFile(null);
-    setQuotedMessage(null); // Clear quoted message after sending
+    setQuotedMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -233,7 +288,6 @@ function Chat() {
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
       <div id="particles-js" className="absolute inset-0 z-0"></div>
       <motion.div className="chat-container max-w-6xl mx-auto my-8 flex rounded-xl shadow-2xl z-10 border-2 border-transparent gradient-border">
-        {/* User List Toggle Icon (Mobile Only) */}
         <div className="sm:hidden absolute top-4 left-4 z-20">
           <button onClick={toggleUserList} className="text-white p-2 rounded-full bg-gray-700 hover:bg-gray-600">
             {selectedUser ? (
@@ -247,7 +301,6 @@ function Chat() {
             )}
           </button>
         </div>
-        {/* User List */}
         <motion.div
           className={`user-list bg-gray-800 p-6 rounded-l-xl sm:w-1/3 w-full absolute sm:static z-10 transition-all duration-300 sm:!translate-x-0 ${
             isUserListOpen ? 'translate-x-0' : '-translate-x-full'
@@ -269,22 +322,31 @@ function Chat() {
                 onClick={() => handleUserClick(user)}
                 whileTap={{ scale: 0.95 }}
               >
-                <img
-                  src={`https://picsum.photos/seed/${user._id}/40`}
-                  alt="profile"
-                  className="w-12 h-12 rounded-full object-cover border border-gray-500"
-                />
+                <div className="relative">
+                  <img
+                    src={`https://picsum.photos/seed/${user._id}/40`}
+                    alt="profile"
+                    className="w-12 h-12 rounded-full object-cover border border-gray-500"
+                  />
+                  {onlineUsers.has(user._id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border border-gray-800"></span>
+                  )}
+                </div>
                 <span>{user.username}{user._id === currentUserId ? ' (You)' : ''}</span>
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
-        {/* Chat Box */}
         <motion.div className="chat-box bg-gray-800 p-6 rounded-r-xl flex flex-col flex-1">
           {selectedUser ? (
             <>
               <div className="flex items-center gap-3 mb-4 chat-header">
-                <h3 className="text-xl font-bold text-white flex-1">Chat with {selectedUser.username}</h3>
+                <h3 className="text-xl font-bold text-white flex-1">
+                  Chat with {selectedUser.username}
+                  {onlineUsers.has(selectedUser._id) && (
+                    <span className="text-green-400 text-sm ml-2">Online</span>
+                  )}
+                </h3>
                 <img
                   src={`https://picsum.photos/seed/${selectedUser._id}/40`}
                   alt={selectedUser.username}
@@ -318,8 +380,19 @@ function Chat() {
                               </a>
                             )
                           )}
-                          <div className="text-xs text-gray-400 mt-1 text-right">
-                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div className="flex items-center justify-end text-xs text-gray-400 mt-1">
+                            <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            {msg.sender.username === currentUsername && (
+                              <span className="ml-1">
+                                {msg.seen ? (
+                                  <i className="fas fa-check-double text-blue-400"></i>
+                                ) : msg.delivered ? (
+                                  <i className="fas fa-check-double text-gray-400"></i>
+                                ) : (
+                                  <i className="fas fa-check text-gray-400"></i>
+                                )}
+                              </span>
+                            )}
                           </div>
                           <button
                             onClick={() => handleQuoteReply(msg)}

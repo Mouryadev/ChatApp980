@@ -358,6 +358,13 @@ label[for="file-upload"]:hover {
 form.flex.space-x-2 {
     background: transparent;
 }
+.my-message .fa-check-double.text-blue-400 {
+  color: #3b82f6; /* Blue for seen messages */
+}
+.my-message .fa-check, .my-message .fa-check-double {
+  font-size: 12px;
+  margin-left: 4px;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .my-message {
