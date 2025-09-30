@@ -255,6 +255,10 @@ button:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgb(81 181 243);
 }
+.content-wrapper-outer button:hover{
+    background: none;
+  
+}
 button:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
@@ -376,6 +380,22 @@ form.flex.space-x-2 {
     flex-direction: column;
     align-items: self-end;
     
+}
+.other-message .content-wrapper-outer {
+    display: flex;
+    gap: 10px;
+}
+.my-message .content-wrapper-outer {
+    display: flex;
+    gap: 7px;
+    flex-direction: row-reverse;
+}
+.fa-reply:before {
+    content: "\f3e5";
+   
+    color: white;
+    opacity: .3;
+    font-size: 15px;
 }
 /* Responsive Design */
 @media (max-width: 768px) {
