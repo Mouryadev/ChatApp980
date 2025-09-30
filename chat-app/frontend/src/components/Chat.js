@@ -252,15 +252,15 @@ function Chat() {
         console.error('File upload error:', error);
       }
     }
-const newMessage = {
-  senderId: currentUserId,
-  receiverId: selectedUser._id,
-  content: message,
-  fileUrl,
-  quotedMessageId: quotedMessage?._id || null, // pass quoted message ID
-  seen: false
-};
-socket.emit('sendMessage', newMessage);
+    const newMessage = {
+      senderId: currentUserId,
+      receiverId: selectedUser._id,
+      content: message,
+      fileUrl,
+      quotedMessageId: quotedMessage?._id || null, // pass quoted message ID
+      seen: false
+    };
+    socket.emit('sendMessage', newMessage);
 
 
     setMessage('');
@@ -300,7 +300,9 @@ socket.emit('sendMessage', newMessage);
               alt="me"
               className="w-12 h-12 rounded-full object-cover border border-gray-500"
             />
-            <h3 className="text-xl font-bold text-white flex-1">{currentUsername}</h3>
+            <h3 className="text-white you-user"> (You)</h3>
+           
+            <h3 className="text-xl font-bold text-white flex-1 user-nm">{currentUsername}</h3>
           </div>
           <motion.div animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             {users.map((user) => (
@@ -330,7 +332,7 @@ socket.emit('sendMessage', newMessage);
           {selectedUser ? (
             <>
               <div className="flex items-center gap-3 mb-4 chat-header">
-                <h3 className="text-xl font-bold text-white flex-1">
+                <h3 className="text-xl font-bold text-white flex-1 chat-stat">
                   Chat with {selectedUser.username}
                   {onlineUsers.has(selectedUser._id) && (
                     <span className="text-green-400 text-sm ml-2">Online</span>
@@ -352,23 +354,26 @@ socket.emit('sendMessage', newMessage);
                         <div className={`p-2 max-w-xs rounded-lg ${msg.sender.username === currentUsername ? 'my-message text-white' : 'other-message text-gray-200'}`}>
                           {msg.quotedMessageId && msg.quotedMessageId.content && (
                             <div className="quote-box bg-gray-600 p-2 mb-2 rounded-lg border-l-4 border-blue-400 text-gray-100 italic">
-                              <strong className="text-blue-300">Quoted from {msg.quotedMessageId.sender.username}:</strong>
+                              <strong className="text-blue-300">Quoted {msg.quotedMessageId.sender.username}:</strong>
                               <p className="ml-2">{msg.quotedMessageId.content}</p>
                             </div>
                           )}
                           <div className="content-wrapper-outer">
 
-                          <div className="content-wrapper">
-
-                            <strong>{msg.sender.username}: </strong>{msg.content}
-                          </div>
-                           <button
-                            onClick={() => handleQuoteReply(msg)}
-                            className="text-blue-400 hover:text-blue-300"
-                          >
-                            <i className="fas fa-reply"></i>
-                          </button>
+                            <div className="content-wrapper">
+  <strong>
+    {msg.sender.username === currentUsername ? "You" : msg.sender.username}:
+  </strong>{" "}
+  {msg.content}
 </div>
+
+                            <button
+                              onClick={() => handleQuoteReply(msg)}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              <i className="fas fa-reply"></i>
+                            </button>
+                          </div>
                           {msg.fileUrl && (
                             (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)),
                               msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
@@ -394,7 +399,7 @@ socket.emit('sendMessage', newMessage);
                             )}
 
                           </div>
-                         
+
                         </div>
                       </div>
                     ))}

@@ -261,6 +261,13 @@ button:hover {
 color: rgb(81 181 243);
   
 }
+.user-nm {
+    text-transform: capitalize;
+}
+.chat-stat {
+    display: flex;
+    flex-direction: column;
+}
 button:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
