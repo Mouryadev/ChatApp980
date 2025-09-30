@@ -387,7 +387,7 @@ socket.emit('sendMessage', newMessage);
                           </div>
                           <button
                             onClick={() => handleQuoteReply(msg)}
-                            className="absolute top-2 right-2 text-blue-400 hover:text-blue-300"
+                            className="text-blue-400 hover:text-blue-300"
                           >
                             <i className="fas fa-reply"></i>
                           </button>

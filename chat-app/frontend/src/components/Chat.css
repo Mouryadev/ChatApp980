@@ -365,6 +365,12 @@ form.flex.space-x-2 {
   font-size: 12px;
   margin-left: 4px;
 }
+.other-message {
+    display: flex;
+    flex-direction: column;
+    align-items: self-start;
+    gap: 10px;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .my-message {
