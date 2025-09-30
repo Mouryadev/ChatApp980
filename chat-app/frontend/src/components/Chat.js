@@ -140,7 +140,7 @@ function Chat() {
       socket.off('messageDelivered');
       socket.off('messageSeen');
     };
-  }, [selectedUser, currentUserId]);
+  }, [selectedUser, messages, currentUserId]);
 
   useEffect(() => {
     if (window.particlesJS) {
