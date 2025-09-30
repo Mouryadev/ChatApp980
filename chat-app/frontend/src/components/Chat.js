@@ -13,7 +13,7 @@ function Chat() {
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [quotedMessage, setQuotedMessage] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState(new Set()); // Track online users
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
   const token = localStorage.getItem('token');
   const currentUserData = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const currentUserId = currentUserData?.id;
@@ -77,7 +77,6 @@ function Chat() {
   };
 
   useEffect(() => {
-    // Mark messages as seen when viewing chat
     if (selectedUser) {
       socket.emit('messageSeen', {
         senderId: selectedUser._id,
@@ -110,6 +109,24 @@ function Chat() {
         )
       );
     });
+    socket.on("messageDelivered", ({ messageId, receiverId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, delivered: true } : msg
+        )
+      );
+    });
+
+    socket.on("messageSeen", ({ senderId, receiverId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.sender._id === currentUserId && msg.receiver === senderId
+            ? { ...msg, seen: true }
+            : msg
+        )
+      );
+    });
+
     return () => {
       socket.off("userTyping");
       socket.off("userStopTyping");
@@ -205,7 +222,6 @@ function Chat() {
       });
       console.log('Messages fetched on user click:', response.data);
       setMessages(response.data);
-      // Emit messageSeen when user clicks to view chat
       socket.emit('messageSeen', {
         senderId: user._id,
         receiverId: currentUserId,
@@ -236,17 +252,16 @@ function Chat() {
         console.error('File upload error:', error);
       }
     }
+const newMessage = {
+  senderId: currentUserId,
+  receiverId: selectedUser._id,
+  content: message,
+  fileUrl,
+  quotedMessageId: quotedMessage?._id || null, // pass quoted message ID
+  seen: false
+};
+socket.emit('sendMessage', newMessage);
 
-    const newMessage = {
-      senderId: currentUserId,
-      receiverId: selectedUser._id,
-      content: message,
-      fileUrl,
-      quotedMessageId: quotedMessage?._id,
-      seen: false, // Initialize as not seen
-    };
-    console.log('Sending message:', newMessage);
-    socket.emit('sendMessage', newMessage);
 
     setMessage('');
     setSelectedFile(null);
@@ -276,9 +291,8 @@ function Chat() {
         </div>
         {/* User List */}
         <motion.div
-          className={`user-list bg-gray-800 p-6 rounded-l-xl sm:w-1/3 w-full absolute sm:static z-10 transition-all duration-300 sm:!translate-x-0 ${
-            isUserListOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`user-list bg-gray-800 p-6 rounded-l-xl sm:w-1/3 w-full absolute sm:static z-10 transition-all duration-300 sm:!translate-x-0 ${isUserListOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
         >
           <div className="flex items-center gap-3 mb-4">
             <img
@@ -343,11 +357,12 @@ function Chat() {
                             </div>
                           )}
                           <div className="content-wrapper">
+
                             <strong>{msg.sender.username}: </strong>{msg.content}
                           </div>
                           {msg.fileUrl && (
                             (console.log('Rendering fileUrl:', msg.fileUrl, 'IsImage:', msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)),
-                            msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
+                              msg.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i)) ? (
                               <img src={msg.fileUrl} alt="uploaded" className="mt-2 max-w-xs rounded" onError={(e) => console.error('Image load error:', msg.fileUrl)} />
                             ) : (
                               <a href={msg.fileUrl} target="_blank" className="text-blue-400 underline mt-2 block">
@@ -360,12 +375,15 @@ function Chat() {
                             {msg.sender.username === currentUsername && (
                               <span className="ml-1">
                                 {msg.seen ? (
-                                  <i className="fas fa-check-double text-blue-400"></i>
+                                  <i className="fas fa-check-double text-blue-400"></i> // Seen
+                                ) : msg.delivered ? (
+                                  <i className="fas fa-check-double text-gray-400"></i> // Delivered
                                 ) : (
-                                  <i className="fas fa-check text-gray-400"></i>
+                                  <i className="fas fa-check text-gray-400"></i> // Sent
                                 )}
                               </span>
                             )}
+
                           </div>
                           <button
                             onClick={() => handleQuoteReply(msg)}

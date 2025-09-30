@@ -57,9 +57,10 @@ const messageSchema = new mongoose.Schema({
   fileUrl: String,
   timestamp: { type: Date, default: Date.now },
   quotedMessageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
-  seen: { type: Boolean, default: false },
-  delivered: { type: Boolean, default: false } // New field for delivery status
+  delivered: { type: Boolean, default: false },
+  seen: { type: Boolean, default: false }
 });
+
 const Message = mongoose.model('Message', messageSchema);
 
 // Middleware to verify JWT
@@ -148,20 +149,39 @@ io.on('connection', (socket) => {
     io.to(receiverId).emit("userStopTyping", { senderId });
   });
 
-  socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl, quotedMessageId, seen, delivered }) => {
-    console.log('Received message data:', { senderId, receiverId, content, fileUrl, quotedMessageId, seen, delivered });
-    const message = new Message({ sender: senderId, receiver: receiverId, content, fileUrl, quotedMessageId, seen, delivered });
-    await message.save();
-    const populatedMessage = await Message.findById(message._id).populate('sender', 'username').populate('quotedMessageId', 'content sender').lean();
-    console.log('Populated message sent:', populatedMessage);
-    io.to(receiverId).emit('receiveMessage', populatedMessage);
-    io.to(senderId).emit('receiveMessage', populatedMessage);
-    // Emit delivered event to sender if receiver is online
-    if (onlineUsers.has(receiverId)) {
-      await Message.updateOne({ _id: message._id }, { $set: { delivered: true } });
-      io.to(senderId).emit('messageDelivered', { messageId: message._id });
-    }
+  socket.on('sendMessage', async ({ senderId, receiverId, content, fileUrl, quotedMessageId }) => {
+  const message = new Message({
+    sender: senderId,
+    receiver: receiverId,
+    content,
+    fileUrl,
+    quotedMessageId: quotedMessageId || null,
+    seen: false,
+    delivered: false
   });
+
+  await message.save();
+
+  // Populate sender and quotedMessage details
+  const populatedMessage = await Message.findById(message._id)
+    .populate('sender', 'username')
+    .populate({
+      path: 'quotedMessageId',
+      select: 'content sender',
+      populate: { path: 'sender', select: 'username' }
+    })
+    .lean();
+
+  io.to(receiverId).emit('receiveMessage', populatedMessage);
+  io.to(senderId).emit('receiveMessage', populatedMessage);
+
+  // mark delivered if receiver online
+  if (onlineUsers.has(receiverId)) {
+    await Message.updateOne({ _id: message._id }, { $set: { delivered: true } });
+    io.to(senderId).emit('messageDelivered', { messageId: message._id });
+  }
+});
+
 
   socket.on('messageDelivered', async ({ messageId, senderId, receiverId }) => {
     await Message.updateOne({ _id: messageId }, { $set: { delivered: true } });
@@ -175,7 +195,7 @@ io.on('connection', (socket) => {
       receiver: receiverId,
       seen: false
     });
-    const messageIds = messages.map(msg => msg._id);
+    const messageIds = messages.map(msg => msg._id.toString());
     await Message.updateMany(
       { _id: { $in: messageIds } },
       { $set: { seen: true, delivered: true } }
@@ -196,5 +216,6 @@ io.on('connection', (socket) => {
     }
   });
 });
+
 
 server.listen(5000, () => console.log('Server running on port 5000'));
