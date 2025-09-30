@@ -257,6 +257,8 @@ button:hover {
 }
 .content-wrapper-outer button:hover{
     background: none;
+    box-shadow: none;
+color: rgb(81 181 243);
   
 }
 button:active {
