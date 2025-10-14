@@ -228,7 +228,7 @@ const deleteAllUsersAndMessages = async () => {
 };
 
 // Run it once, then comment out or delete after execution
-deleteAllUsersAndMessages();
+// deleteAllUsersAndMessages();
 
 
 
