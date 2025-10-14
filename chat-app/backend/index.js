@@ -216,6 +216,18 @@ io.on('connection', (socket) => {
     }
   });
 });
+// Utility function to delete all messages
+const deleteAllMessages = async () => {
+  try {
+    await Message.deleteMany({});
+    console.log('✅ All chat messages have been deleted.');
+  } catch (err) {
+    console.error('❌ Error deleting messages:', err);
+  }
+};
+
+// Call the function once (Uncomment to run)
+deleteAllMessages();
 
 
 server.listen(5000, () => console.log('Server running on port 5000'));
